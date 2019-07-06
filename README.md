@@ -15,26 +15,26 @@ Un nodo de datos puede tener **una o más particiones**.
 Por ejemplo, imaginemos que arrancamos con 12 particiones, en un solo nodo de datos.
 
 Si esto nos "queda chico" a nivel procesamiento, podemos agregar un segundo nodo de datos, y las particiones se reparten:
-Nodo1 con 6 particiones.
-Nodo2 con las otras 6.
+* Nodo1 con 6 particiones.
+* Nodo2 con las otras 6.
 
 Si agregamos otro nodo, se las vuelven a repartir:
-Nodo1 con 4 particiones.
-Nodo2 con 4 particiones.
-Nodo3 con 4 particiones.
+* Nodo1 con 4 particiones.
+* Nodo2 con 4 particiones.
+* Nodo3 con 4 particiones.
 
 Otro más:
-Nodo1 con 3 particiones.
-Nodo2 con 3 particiones.
-Nodo3 con 3 particiones.
-Nodo4 con 3 particiones.
+* Nodo1 con 3 particiones.
+* Nodo2 con 3 particiones.
+* Nodo3 con 3 particiones.
+* Nodo4 con 3 particiones.
 
 Otro más:
-Nodo1 con 3 particiones.
-Nodo2 con 3 particiones.
-Nodo3 con 2 particiones.
-Nodo4 con 2 particiones.
-Nodo5 con 2 particiones.
+* Nodo1 con 3 particiones.
+* Nodo2 con 3 particiones.
+* Nodo3 con 2 particiones.
+* Nodo4 con 2 particiones.
+* Nodo5 con 2 particiones.
 
 Y así.
 
