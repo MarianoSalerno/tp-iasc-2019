@@ -89,6 +89,10 @@ Son los encargados de almacenar sus particiones, y dentro de ellas, los datos.
 * Valida que la key sea correcta. Si es así:
 * Asigna ese valor a esa key (la pisa si es que había algo asignado).
 
+Para todo esto, cada nodo de datos tiene que saber qué particiones tiene asignado.
+
+¿De dónde saca esa info? Se lo dice el orquestador máster. Ver más abajo.
+
 ## Nodos Clientes
 
 Son la cara visible para que otros nos hagan consultas. Podría haber un load balancer adelante de ellos.
