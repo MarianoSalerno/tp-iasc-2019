@@ -2,9 +2,9 @@
   "name": "tp-iasc-2019-cliente",
   "version": "1.0.0",
   "description": "Implementacion del cliente para el TP de arquitecturas concurrentes",
-  "main": "cliente.js",
+  "main": "client.js",
   "scripts": {
-    "dev": "nodemon cliente.js",
+    "dev": "./node_modules/.bin/nodemon client.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

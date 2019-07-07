@@ -2,7 +2,10 @@
 
 ## Levantar el proyecto
 
-Entrar a cualquier carpeta y levantar el componente con `npm run dev`
+Entrar en alguna de las carpetas (client, data, manager). Y luego:
+* Asegurarse de tener una versión reciente de Node, idealmente la última estable. Pueden instalar y usar **nvm** para cambiar de versión fácilmente.
+* Instalar los paquetes, con `npm install` (solo hace falta la primera vez, o si se agregan dependencias)
+* Levantar el componente, con `npm run dev`
 
 ## Particiones
 
