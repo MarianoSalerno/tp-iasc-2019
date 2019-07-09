@@ -1,9 +1,25 @@
+const configuration = require('./conf.js') 
 const express = require('express')
-const app = express()
-const port = 3000
-const map = {} // TODO: Borrar el mapa de este nodo. Solo tienen que guardarse en nodos de datos
 const bodyParser = require('body-parser')
-const maxSize = 10
+const axios = require('axios');
+const app = express()
+const map = {} // TODO: Borrar el mapa de este nodo. Solo tienen que guardarse en nodos de datos
+const orchestrators = configuration.orchestrators
+let ipMasterOrcherstrator
+
+function findMasterOrchestrator() {
+	for (ip of orchestrators) {
+		axios.post(`${ip}/get-conf/client`)
+		.then((response) => {
+			console.log(response.data)
+			var dataNodes = response.data.dataNodes
+			var maxSize = response.data.maxSize
+			ipMasterOrcherstrator = ip
+		})
+		.catch((error) => console.log("fallo"))
+	}
+}
+findMasterOrchestrator()
 
 app.use( bodyParser.json() );
 
@@ -32,8 +48,6 @@ const upsert = (req, res, next) => {
 app.post('/data/:key', upsert)
 app.put('/data/:key', upsert)
 
-
-
-app.listen(port, () => console.log(`Cliente levantado en el puerto: ${port}!`))
+app.listen(configuration.port, () => console.log(`Cliente levantado en el puerto: ${configuration.port}!`))
 
 const tooBig = (keyOrValue) => keyOrValue.length > maxSize
