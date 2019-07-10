@@ -43,7 +43,7 @@ Y así.
 
 Con el sistema completo, permite:
 - Arrancar con pocos o un nodo de datos, e ir escalando hasta las N particiones definidas, para distribuir la carga.
-- Tener una agrupación lógica de datos, para poder **replicacarlas** entre los nodos, y por ende, tener resiliencia.
+- Tener una agrupación lógica de datos, para poder **replicarlas** entre los nodos, y por ende, tener resiliencia.
 
 Una vez configurada la cantidad de particiones, ésta **no puede variar**. Así que conviene configurar una cantidad *holgada* de las mismas.
 
