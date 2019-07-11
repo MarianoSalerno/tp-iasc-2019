@@ -2,13 +2,11 @@ const express = require('express')
 const bodyParser = require('body-parser') 
 const app = express() 
 
-const configuration = require('./conf.js')  
 const consoleParams = require('./consoleParams.js')  
 
 const subscriptions = require('./subscriptions.js')  
+const cluster = require('./cluster.js')  
 
-let isMaster = configuration.isMaster 
- 
 function changeMasterOrchestrator() { 
   
 } 
@@ -16,20 +14,12 @@ function changeMasterOrchestrator() {
 app.use( bodyParser.json() ); 
  
 app.post('/get-conf/:node', (req, res, next) => { 
-	if(isMaster) { 
-		const node = req.params.node 
-		let response = {} 
-
-		if (node == 'client') { 
-			response['dataNodes'] = configuration.dataNodes 
-			response['maxSize'] = configuration.maxSize
-		} else { 
-			response['maxStorage'] = configuration.maxStorage 
-		} 
-		res.send(response) 
-	} else { 
+	if(cluster.thisIsSlave) { 
 		res.status(400).send('Not the master orchestrator'); 
-	} 
+	} else {
+		const node = req.params.node // TODO: Ver si hace falta diferenciar la info según quién pregunte
+		res.json(cluster.snapshot()) 
+	}
 }) 
 
 const validNodeTypes = ["orchestrator", "data", "client"]
@@ -40,7 +30,7 @@ app.post('/subscribe/:type', (req, res, next) => {
 	} else {
 		const subscriberPort = req.body.port
 		subscriptions.addSubscriber(type, subscriberPort)
-		res.sendStatus(200)
+		res.json(cluster.snapshot())
 	}
 }) 
  
@@ -52,6 +42,6 @@ process.on('exit', () => {
     changeMasterOrchestrator() 
 }) 
 
-subscriptions.configureAsMasterOrSlave(consoleParams) 
+cluster.configureAsMasterOrSlave(consoleParams) 
 
 app.listen(consoleParams.port, () => console.log(`Orquestrator working on port: ${consoleParams.port}!`))

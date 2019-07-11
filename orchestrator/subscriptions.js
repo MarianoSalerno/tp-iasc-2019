@@ -11,21 +11,17 @@ function addSubscriber(type, subscriberPort){
 	subscribedNodes[type] += subscriberPort
 }
 
-function configureAsMasterOrSlave(consoleParams){
-	if (consoleParams.port == consoleParams.masterPort) {
-		console.log("I'm the master ^_^")
-	} else {
-		subscribeToMasterOrchestrator(consoleParams.port, consoleParams.masterPort)
-	}
-}
+
 
 function subscribeToMasterOrchestrator(myPort, masterPort){
 	axios.post(`http://localhost:${masterPort}/subscribe/orchestrator`, {port: myPort})
 		.then((response) => {
 			console.log(`I'm subscribed to ${masterPort}!`)
+			// TODO: Pedir healthchecks cada segundo al master, y reaccionar si algo sale mal!!
 		})
 		.catch((error) => console.log(`Something failed subscribing to ${masterPort}. More info: ${error}`))
 }
 
+exports.nodes = subscribedNodes
 exports.addSubscriber = addSubscriber
-exports.configureAsMasterOrSlave = configureAsMasterOrSlave
+exports.subscribeToMasterOrchestrator = subscribeToMasterOrchestrator
