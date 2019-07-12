@@ -38,4 +38,9 @@ const isTooBig = (keyOrValue) => keyOrValue.length > maxSize
 app.post('/keys/:key', upsert) //todo: pasarlo al post que venga en el body
 app.put('/keys/:key', upsert)
 
+app.get('/healthcheck',(req, res, next) => { 
+	// Hoy devuelve 200, pero los nodos de datos podrían tener lógica diferente de los orquestadores para verificar que están vivos y funcionan bien
+	res.sendStatus(200)
+}) 
+
 app.listen(port, () => console.log(`Example app listening on port ${port}!`))
