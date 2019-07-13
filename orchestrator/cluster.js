@@ -43,17 +43,17 @@ function changeToMaster(){
 	setSnapshot.orchestrators.master = setSnapshot.orchestrators.replacementsInOrder.pop()
 }
 
-function initAsSlave(){
-	subscriptions.subscribeToMasterOrchestrator(consoleParams.port, consoleParams.masterPort)
+function initAsSlave(app){
+	subscriptions.subscriber.subscribeAsOrchestrator(app, consoleParams.port, consoleParams.masterPort)
 }
 
-function configureAsMasterOrSlave(consoleParams){
-	consoleParams.port == consoleParams.masterPort ? initAsMaster() : initAsSlave()
+function init(app){
+	consoleParams.port == consoleParams.masterPort ? initAsMaster() : initAsSlave(app)
 }
 
 exports.thisIsMaster = thisIsMaster
 exports.thisIsSlave = !thisIsMaster
-exports.init = configureAsMasterOrSlave
+exports.init = init
 exports.getSnapshot = getSnapshot
 exports.setSnapshot = setSnapshot
 

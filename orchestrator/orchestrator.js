@@ -48,6 +48,6 @@ process.on('exit', () => {
     changeMasterOrchestrator() 
 }) 
 
-cluster.init() 
+cluster.init(app) 
 
 app.listen(consoleParams.port, () => console.log(`Orquestrator working on port: ${consoleParams.port}!`))
