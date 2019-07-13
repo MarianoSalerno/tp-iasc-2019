@@ -111,7 +111,9 @@ app.get('/keys/:key', (req, res, next) =>  {
     console.log("Value " + value) //todo: borrar
     if (value === undefined) return next(new Error('Key not found'))
 
-    res.json({key: value}) 
+    const result = {}
+    result[key] = value
+    res.json(result) 
 }
 )
 
@@ -119,7 +121,17 @@ app.post('/keys', insert)
 app.put('/keys/:key', update)
 app.delete('/keys/:key', remove)
 
-function getConfigFromOrchestrator() {
+app.get('/healthcheck', (req, res, next) => { 
+	res.sendStatus(200)
+}) 
+
+
+//app.get('/partitions', updatePartitionsAccepted) todo
+
+function registerToOrchestrator() {
+
 }
+
+registerToOrchestrator()
 
 app.listen(config.port, () => console.log(`Data node listening on port ${config.port}!`))
