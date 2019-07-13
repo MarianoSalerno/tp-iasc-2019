@@ -5,21 +5,6 @@ const port = 3001
 const map = new Map()
 const maxSize = 10
 
-app.use(bodyParser.json())
-
-app.get('/', (req, res) => res.send('Hello World!'))
-
-app.get('/keys/:key', (req, res, next) =>  { 
-    const key = req.params.key
-    const value = map.has[key]
-    if (value) return next(new Error('Key not found'))
-
-    let oMyOBject = {value : value}
-
-    res.json(oMyOBject) 
-}
-)
-
 const upsert = (key, req, res, next) => {
 	const value = req.body.value
 
@@ -27,7 +12,7 @@ const upsert = (key, req, res, next) => {
     if (isTooBig(value)) return next(new Error('Value supera tamaño maximo'))
 
 	// TODO: Pegarle a la partición del nodo correspondiente
-	map[key] = value
+	map.set(key, value)
 	res.json({ response : 'ok' })
 }
 
@@ -53,6 +38,21 @@ const remove = (req, res, next) => {
 
     res.json({"response":"ok"})
 }
+
+app.use(bodyParser.json())
+
+app.get('/keys/:key', (req, res, next) =>  { 
+    const key = req.params.key
+    const isKeyPresent = map.has(key)
+    if (!isKeyPresent) return next(new Error('Key not found'))
+
+    const value = map.get(key);
+
+    let oMyOBject = { key : value}
+
+    res.json(oMyOBject) 
+}
+)
 
 app.post('/keys', insert) 
 app.put('/keys/:key', update)
