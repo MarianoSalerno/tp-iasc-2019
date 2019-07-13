@@ -1,9 +1,8 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const config = require('./conf.js')
 const hash = require('./hash-function.js')
+const config = require('./consoleParams.js')  
 const app = express()
-
 
 //todo: todo esto deberia pasarse por parametro
 const totalPartitions = 3
@@ -44,7 +43,7 @@ const insert = (req, res, next) => {
     upsert(key, req, res, next)
 }
 
-const isTooBig = (keyOrValue) => keyOrValue.length > config.maxSizeKeyOrValue
+const isTooBig = (keyOrValue) => keyOrValue.length > 10 //todo: sacarlo de la conexion con el orquestador
 
 const remove = (req, res, next) => {
     const key = req.params.key
@@ -121,7 +120,6 @@ app.put('/keys/:key', update)
 app.delete('/keys/:key', remove)
 
 function getConfigFromOrchestrator() {
-
 }
 
 app.listen(config.port, () => console.log(`Data node listening on port ${config.port}!`))
