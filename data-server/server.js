@@ -1,9 +1,26 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const config = require('./conf.js')
+const hash = require('./hash-function.js')
 const app = express()
-const port = 3001
-const map = new Map()
-const maxSize = 10
+
+
+//todo: todo esto deberia pasarse por parametro
+const totalPartitions = 3
+const newPartitions = new Map() //indexado por numero de particion presente --> {2, datos},{3, datos}
+newPartitions.set(0, new Map())
+newPartitions.set(1, new Map())
+newPartitions.set(2, new Map())
+const maxSizePartition = 4
+
+function getPartition(key, next) {
+    const partitionIndex = hash.getPartitionFromKey(totalPartitions, key)
+    console.log("Resultado hash " + partitionIndex + ". Key " + key) //todo: borrar
+    const partition = newPartitions.get(partitionIndex)
+    if(partition === undefined) return next(new Error("Partition not present in this node"))
+
+    return partition
+}
 
 const upsert = (key, req, res, next) => {
 	const value = req.body.value
@@ -11,7 +28,9 @@ const upsert = (key, req, res, next) => {
     if (isTooBig(key)) return next(new Error('Key supera tamaño maximo'))
     if (isTooBig(value)) return next(new Error('Value supera tamaño maximo'))
 
-	map.set(key, value)
+    const partition = getPartition(key, next)
+    partition.set(key, value)
+    
 	res.json({ response : 'ok' })
 }
 
@@ -25,11 +44,13 @@ const insert = (req, res, next) => {
     upsert(key, req, res, next)
 }
 
-const isTooBig = (keyOrValue) => keyOrValue.length > maxSize
+const isTooBig = (keyOrValue) => keyOrValue.length > config.maxSizeKeyOrValue
 
 const remove = (req, res, next) => {
     const key = req.params.key
-    const keyWasPresent = map.delete(key)
+    const partition = getPartition(key, next)
+    const keyWasPresent = partition.delete(key)
+    
     if(!keyWasPresent) {
         res.status(400).json({"response" : "Key was not present in node"})
         return    
@@ -41,10 +62,12 @@ const remove = (req, res, next) => {
 function searchForGreaterValues(valuesGreaterThan, res) {
     const result = {}
 
-    for (var [key, value] of map) {
-        console.log(key + ' = ' + value);
-        if (value > valuesGreaterThan) {
-            result[key] = value;
+    for(var partitions of newPartitions.values()) {
+        for (var [key, value] of partitions) {
+            console.log(key + ' = ' + value);
+            if (value > valuesGreaterThan) {
+                result[key] = value;
+            }
         }
     }
 
@@ -54,13 +77,15 @@ function searchForGreaterValues(valuesGreaterThan, res) {
 function searchForSmallerValues(valuesSmallerThan, res) {
     const result = {}
 
-    for (var [key, value] of map) {
-        console.log(key + ' = ' + value);
-        if (value < valuesSmallerThan) {
-            result[key] = value;
+    for(var partitions of newPartitions.values()) { 
+        for (var [key, value] of partitions) {
+            console.log(key + ' = ' + value);
+            if (value < valuesSmallerThan) {
+                result[key] = value;
+            }
         }
     }
-    
+
     res.json(result);
 }
 
@@ -80,14 +105,14 @@ app.get('/scan', searchForValues)
 
 app.get('/keys/:key', (req, res, next) =>  { 
     const key = req.params.key
-    const isKeyPresent = map.has(key)
-    if (!isKeyPresent) return next(new Error('Key not found'))
 
-    const value = map.get(key)
+    const partition = getPartition(key, next)
 
-    let oMyOBject = { key : value}
+    const value = partition.get(key)
+    console.log("Value " + value) //todo: borrar
+    if (value === undefined) return next(new Error('Key not found'))
 
-    res.json(oMyOBject) 
+    res.json({key: value}) 
 }
 )
 
@@ -95,4 +120,8 @@ app.post('/keys', insert)
 app.put('/keys/:key', update)
 app.delete('/keys/:key', remove)
 
-app.listen(port, () => console.log(`Data node listening on port ${port}!`))
+function getConfigFromOrchestrator() {
+
+}
+
+app.listen(config.port, () => console.log(`Data node listening on port ${config.port}!`))
