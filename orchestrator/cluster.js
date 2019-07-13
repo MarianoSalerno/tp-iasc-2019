@@ -20,7 +20,6 @@ function addDataNode(port){
 var thisIsMaster = false
 
 function initAsMaster(){
-	changeToMaster()
 	snapshot = {
 		dataConfiguration: {
 			itemMaxSize: configuration.maxSize,
