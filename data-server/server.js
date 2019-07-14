@@ -1,17 +1,14 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const hash = require('./hash-function.js')
 const config = require('console_params') 
 const subscriptions = require('subscriptions')  
 const app = express()
-const localIp = require('internal-ip')
-const axios = require('axios')
 
-//todo: todo esto deberia pasarse por parametro
-const totalPartitions = 3
 const partitions = new Map() //indexado por numero de particion presente --> {2, datos},{3, datos}
 let maxSizePerPartition
 let itemMaxSize
+let partitionsFrom
+let partitionsTo
 
 function getPartitionIndex(req, next) {
     const partitionIndexString = req.params.partition
@@ -99,7 +96,6 @@ const searchForValues = (req, res, next) => {
     return next(new Error('Value not specified'))
 }
 
-
 app.use(bodyParser.json())
 app.get('/scan', searchForValues)
 
@@ -124,15 +120,34 @@ app.get('/healthcheck', (req, res, next) => {
 	res.sendStatus(200)
 })
 
-function updateShards(snapshot){
-    partitions.set(0, new Map())
-    partitions.set(1, new Map())
-    partitions.set(2, new Map())
-    maxSizePerPartition = 5 
-    itemMaxSize = 20 
-    // TODO: Actualizar nuestros shards para tener solo lo que indique el snapshot para este nodo
+function updateShards(snapshot) {
+    itemMaxSize = snapshot.dataConfiguration.itemMaxSize
+    maxSizePerPartition = snapshot.dataConfiguration.maxStoragePerNode
+    const shards = snapshot.shards
+    const nodePath = new String(`http://localhost:${config.port}`);
+   
+    const shardsForThisNode = shards.find(element => {
+        const elementPath = new String(element.path);
+        return JSON.stringify(nodePath) === JSON.stringify(elementPath);
+    });
+
+    if(shardsForThisNode === undefined) { console.log(`No shards found for node port ${config.port}. Fix configuration`); return new Error() } 
+
+    partitionsFrom = shardsForThisNode.partitions.from
+    partitionsTo = shardsForThisNode.partitions.to 
+    
+    const range = (start, stop) => Array.from({ length: (stop - start) + 1}, (_, i) => start + i );
+    const partitionIndexes = range(partitionsFrom, partitionsTo)
+    partitionIndexes.forEach(index => {
+        if(partitions.has(index)) return;
+        partitions.set(index, new Map())
+    });
+
+    console.log(`Config updated. ItemMaxSize: ${itemMaxSize}. MaxSizePerPartition: ${maxSizePerPartition}`)
+    console.log(`Partitions accepted ${Array.from(partitions.keys())}`)
 }
 
 subscriptions.subscriber.subscribeAsDataNode(app, config.port, config.masterPort, updateShards)
 
-app.listen(config.port, () => console.log(`Data node listening on port ${config.port}!`))
+app.listen(config.port, () => console.log(`Data node listening on port ${config.port}!`)) 
+//TODO: que solo se haga si el nodo puede iniciar bien, pasarlo como callback del subscribe
