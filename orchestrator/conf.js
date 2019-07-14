@@ -1,37 +1,35 @@
-exports.port = 4000 
-exports.isMaster = true 
-exports.orchestrators = ['http://localhost:4001','http://localhost:4002'] //estos son sus compañeros orquestadores, en caso de caerse le tiene que transferir el master a otro. 
 //client configurations 
 exports.dataNodes = [ 
     { 
-        'ip': '192.168.0.2', 
+        'path': 'http://localhost:5001', 
         'partitions': { 
-            'bottom': 0, 
-            'top': 15 
+            'from': 1, 
+            'to': 16 
         } 
     }, 
     { 
-        'ip': '192.168.0.3', 
+        'path': 'http://localhost:5002', 
         'partitions': { 
-            'bottom': 16, 
-            'top': 31 
+            'from': 17, 
+            'to': 32 
         } 
     }, 
     { 
-        'ip': '192.168.0.4', 
+        'path': 'http://localhost:5003', 
         'partitions': { 
-            'bottom': 32, 
-            'top': 47 
+            'from': 33, 
+            'to': 48 
         } 
     }, 
     { 
-        'ip': '192.168.0.5', 
+        'path': 'http://localhost:5004', 
         'partitions': { 
-            'bottom': 48, 
-            'top': 63 
+            'from': 49, 
+            'to': 64 
         } 
-    } 
+    }
 ] 
+exports.totalPartitions = 64
 exports.maxSize = 10
 //data nodes configurations 
 exports.maxStorage = 5

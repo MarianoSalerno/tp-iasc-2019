@@ -31,6 +31,7 @@ app.post('/subscribers/:type', (req, res, next) => {
 		subscriptions.publisher.addSubscriber(subscriberPort)
 		// cluster.addSubscriber(subscriberPort) // TODO: Agregarlo con el tipo correcto, para que se sume al snapshot
 		console.log(cluster.getSnapshot())
+		console.log(`New subscription from ${type} node!`)
 		res.send(cluster.getSnapshot())
 	}
 })

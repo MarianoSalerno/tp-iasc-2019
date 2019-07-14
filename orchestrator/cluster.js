@@ -29,7 +29,8 @@ function initAsMaster(){
 			master: consoleParams.masterPort,
 			replacementsInOrder: []
 		},
-		shards: []
+		shards: configuration.dataNodes,
+		totalPartitions: configuration.totalPartitions
 	}
 	console.log("Cluster initialized. Waiting subscribers in /subscribers/:type to send news!")
 }

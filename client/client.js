@@ -1,53 +1,99 @@
-const configuration = require('./conf.js') 
+const configuration = require('./consoleParams.js') 
 const express = require('express')
 const bodyParser = require('body-parser')
+const hash = require('./hash-function.js')
 const axios = require('axios');
 const app = express()
-const map = {} // TODO: Borrar el mapa de este nodo. Solo tienen que guardarse en nodos de datos
-const orchestrators = configuration.orchestrators
-let ipMasterOrcherstrator
+var dataNodes
+// var itemMaxSize
+var totalPartitions
 
 function findMasterOrchestrator() {
-	for (ip of orchestrators) {
-		axios.post(`${ip}/get-conf/client`)
+	for (let ip of configuration.orchestrators) {
+		axios.post(`${ip}/subscribers/client`)
 		.then((response) => {
-			console.log(response.data)
-			var dataNodes = response.data.dataNodes
-			var maxSize = response.data.maxSize
-			ipMasterOrcherstrator = ip
+			console.log(`Registered client node to ${ip}!`)
+			dataNodes = response.data.shards
+			// itemMaxSize = response.data.dataConfiguration.itemMaxSize esto debería sólo chequearlo el datanode?
+			totalPartitions = response.data.totalPartitions
 		})
-		.catch((error) => console.log("fallo"))
+		.catch((error) => console.log(`Error: Orchestrator ${ip} response: ${error}`))
 	}
 }
 findMasterOrchestrator()
 
-app.use( bodyParser.json() );
-
-app.get('/data/:key', (req, res, next) => {
-	const key = req.params.key
-	if (tooBig(key) || tooBig(value)) return next(new Error('key o value superan tamaño maximo'))
-
-	// TODO: Pegarle al nodo de datos correspondiente, y si éste da 404, devolver 404 nosotros también.
-	const value = map[key]
-	if (value === undefined) return next(new Error('key not found'))
-
-	res.send(value)
-})
-
-const upsert = (req, res, next) => {
-	const key = req.params.key
-	const value = req.body.value
-
-	if (tooBig(key) || tooBig(value)) return next(new Error('key o value superan tamaño maximo'))
-
-	// TODO: Pegarle al nodo de datos correspondiente
-	map[key] = value
-	res.send("ok")
+function getDatanodePathByPartition(partition) {
+	return dataNodes.filter((x) => x.partitions.from <= partition && partition <= x.partitions.to)[0]['path']
 }
 
-app.post('/data/:key', upsert)
-app.put('/data/:key', upsert)
+app.use( bodyParser.json() );
+
+app.get('/get/:key', (req, res, next) => {
+	try {
+		const key = req.params.key
+		partition = hash.getPartitionFromKey(totalPartitions, key)
+		datanodeIp = getDatanodePathByPartition(partition)
+		axios.get(`${datanodeIp}/keys/${partition}/${key}`)
+		.then((response) => console.log(`Value: ${response.data}`))
+		.catch((error) => console.log(`ERROR: ${error}`))
+	} catch(e) {
+		console.log(`No configuration found; trying to reconnect master orchestrator`)
+		findMasterOrchestrator()
+	}
+})
+
+app.get('/insert/:key/:value', (req, res, next) => {
+	try {
+		const key = req.params.key
+		const value = req.params.value
+		partition = hash.getPartitionFromKey(totalPartitions, key)
+		datanodeIp = getDatanodePathByPartition(partition)
+		axios.post(`${datanodeIp}/keys`, 
+			{
+				'key': key,
+				'value': value,
+				'partition': partition
+			}
+		)
+		.then((response) => console.log(`Insertion: ${response.data}`))
+		.catch((error) => console.log(`ERROR: ${error}`))
+	} catch(e) {
+		console.log(`No configuration found; trying to reconnect master orchestrator`)
+		findMasterOrchestrator()
+	}
+})
+
+app.get('/update/:key/:value', (req, res, next) => {
+	try {
+		const key = req.params.key
+		const value = req.params.value
+		partition = hash.getPartitionFromKey(totalPartitions, key)
+		datanodeIp = getDatanodePathByPartition(partition)
+		axios.put(`${datanodeIp}/keys/${partition}/${key}`, 
+			{
+				'value': value
+			}
+		)
+		.then((response) => console.log(`Update: ${response.data}`))
+		.catch((error) => console.log(`ERROR: ${error}`))
+	} catch(e) {
+		console.log(`No configuration found; trying to reconnect master orchestrator`)
+		findMasterOrchestrator()
+	}
+})
+
+app.get('/delete/:key', (req, res, next) => {
+	try {
+		const key = req.params.key
+		partition = hash.getPartitionFromKey(totalPartitions, key)
+		datanodeIp = getDatanodePathByPartition(partition)
+		axios.delete(`${datanodeIp}/keys/${partition}/${key}`)
+		.then((response) => console.log(`Deletion: ${response.data}`))
+		.catch((error) => console.log(`ERROR: ${error}`))
+	} catch(e) {
+		console.log(`No configuration found; trying to reconnect master orchestrator`)
+		findMasterOrchestrator()
+	}
+})
 
 app.listen(configuration.port, () => console.log(`Cliente levantado en el puerto: ${configuration.port}!`))
-
-const tooBig = (keyOrValue) => keyOrValue.length > maxSize
