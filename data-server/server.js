@@ -13,7 +13,9 @@ let partitionsTo
 function getPartitionIndex(req, next) {
     const partitionIndexString = req.params.partition
     const partitionIndex = parseInt(partitionIndexString)
-    if(!partitions.has(partitionIndex)) return next(new Error('Partition not present in node'))
+    if(!partitions.has(partitionIndex)) {
+        return next(new Error('Partition not present in node'))
+    }
     return partitionIndex
 }
 
@@ -29,7 +31,9 @@ const upsert = (key, req, res, next) => {
     const partitionIndex = getPartitionIndex(req, next)
     const partition = partitions.get(partitionIndex)
     
-    if (!partitionHasEnoughSpace(partition)) return next(new Error(`Partition ${partitionIndex} does not have enough space to store another pair.`))
+    if (!partitionHasEnoughSpace(partition)) {
+        return next(new Error(`Partition ${partitionIndex} does not have enough space to store another pair.`))
+    }
     
     partition.set(key, value)
     
@@ -110,7 +114,10 @@ app.get('/keys/:partition/:key', (req, res, next) =>  {
     const partitionIndex = getPartitionIndex(req, next)
 
     const value = partitions.get(partitionIndex).get(key)
-    if (value === undefined) return next(new Error('Key not found'))
+    if (value === undefined) {
+        res.status(400).json({"response" : "Key was not present in node"})
+        return 
+    }
 
     const result = {}
     result[key] = value
