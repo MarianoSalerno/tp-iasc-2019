@@ -10,11 +10,12 @@ let itemMaxSize
 let partitionsFrom
 let partitionsTo
 
-function getPartitionIndex(req, next) {
+function getPartitionIndex(req, res) {
     const partitionIndexString = req.params.partition
     const partitionIndex = parseInt(partitionIndexString)
     if(!partitions.has(partitionIndex)) {
-        return next(new Error('Partition not present in node'))
+        res.status(400).json({"response" : "Partition not present in node"})
+        return -1
     }
     return partitionIndex
 }
@@ -26,16 +27,27 @@ function partitionHasEnoughSpace(partition) {
 const upsert = (key, req, res, next) => {
     const value = req.body.value
 
-    if (isTooBig(key)) return next(new Error('Key is too large'))
-    if (isTooBig(value)) return next(new Error('Value is too large'))
-    const partitionIndex = getPartitionIndex(req, next)
+    if (isTooBig(key)) {
+        res.status(400).json({"response" : "Key is too large"})
+        return 
+    }
+
+    if (isTooBig(value)) {
+        res.status(400).json({"response" : "Value is too large"})
+        return
+    }
+
+    const partitionIndex = getPartitionIndex(req, res)
+    if(partitionIndex === -1) return
     const partition = partitions.get(partitionIndex)
     
     if (!partitionHasEnoughSpace(partition)) {
-        return next(new Error(`Partition ${partitionIndex} does not have enough space to store another pair.`))
+        res.status(400).json({"response" : `Partition ${partitionIndex} does not have enough space to store another pair.`})
+        return
     }
     
     partition.set(key, value)
+    console.log(`New pair inserted. Key: ${key}. Value: ${value}`)
     
 	res.json({ response : 'ok' })
 }
@@ -54,7 +66,8 @@ const isTooBig = (keyOrValue) => keyOrValue.length > itemMaxSize
 
 const remove = (req, res, next) => {
     const key = req.params.key
-    const partitionIndex = getPartitionIndex(req, next)
+    const partitionIndex = getPartitionIndex(req, res)
+    if(partitionIndex === -1) return
 
     const keyWasPresent = partitions.get(partitionIndex).delete(key)
     
@@ -62,6 +75,8 @@ const remove = (req, res, next) => {
         res.status(400).json({"response" : "Key was not present in node"})
         return    
     }
+
+    console.log(`Key-value pair removed. Key: ${key}`)
 
     res.json({"response":"ok"})
 }
@@ -103,7 +118,8 @@ const searchForValues = (req, res, next) => {
     const valuesSmallerThan = req.query.valuesSmallerThan
     if(valuesSmallerThan != undefined) return searchForSmallerValues(valuesSmallerThan, res);
     
-    return next(new Error('Value not specified'))
+    res.status(400).json({"response" : "Value not specified"})
+    return
 }
 
 app.use(bodyParser.json())
@@ -111,7 +127,8 @@ app.get('/scan', searchForValues)
 
 app.get('/keys/:partition/:key', (req, res, next) =>  { 
     const key = req.params.key
-    const partitionIndex = getPartitionIndex(req, next)
+    const partitionIndex = getPartitionIndex(req, res)
+    if(partitionIndex === -1) return
 
     const value = partitions.get(partitionIndex).get(key)
     if (value === undefined) {
