@@ -9,30 +9,25 @@ const axios = require('axios')
 
 //todo: todo esto deberia pasarse por parametro
 const totalPartitions = 3
-const newPartitions = new Map() //indexado por numero de particion presente --> {2, datos},{3, datos}
-newPartitions.set(0, new Map())
-newPartitions.set(1, new Map())
-newPartitions.set(2, new Map())
-
+const partitions = new Map() //indexado por numero de particion presente --> {2, datos},{3, datos}
 let maxSizePerPartition
 let itemMaxSize
 
-function getPartition(key, next) {
-    const partitionIndex = hash.getPartitionFromKey(totalPartitions, key)
-    console.log("Resultado hash " + partitionIndex + ". Key " + key) //todo: borrar
-    const partition = newPartitions.get(partitionIndex)
-    if(partition === undefined) return next(new Error("Partition not present in this node"))
-
-    return partition
+function getPartitionIndex(req, next) {
+    const partitionIndexString = req.params.partition
+    const partitionIndex = parseInt(partitionIndexString)
+    if(!partitions.has(partitionIndex)) return next(new Error('Partition not present in node'))
+    return partitionIndex
 }
 
 const upsert = (key, req, res, next) => {
-	const value = req.body.value
+    const value = req.body.value
+    const partitionIndex = getPartitionIndex(req, next)
 
     if (isTooBig(key)) return next(new Error('Key supera tamaño maximo'))
     if (isTooBig(value)) return next(new Error('Value supera tamaño maximo'))
 
-    const partition = getPartition(key, next)
+    const partition = partitions.get(partitionIndex)
     partition.set(key, value)
     
 	res.json({ response : 'ok' })
@@ -52,8 +47,9 @@ const isTooBig = (keyOrValue) => keyOrValue.length > itemMaxSize
 
 const remove = (req, res, next) => {
     const key = req.params.key
-    const partition = getPartition(key, next)
-    const keyWasPresent = partition.delete(key)
+    const partitionIndex = getPartitionIndex(req, next)
+
+    const keyWasPresent = partitions.get(partitionIndex).delete(key)
     
     if(!keyWasPresent) {
         res.status(400).json({"response" : "Key was not present in node"})
@@ -66,7 +62,7 @@ const remove = (req, res, next) => {
 function searchForGreaterValues(valuesGreaterThan, res) {
     const result = {}
 
-    for(var partitions of newPartitions.values()) {
+    for(var partitions of partitions.values()) {
         for (var [key, value] of partitions) {
             console.log(key + ' = ' + value);
             if (value > valuesGreaterThan) {
@@ -81,7 +77,7 @@ function searchForGreaterValues(valuesGreaterThan, res) {
 function searchForSmallerValues(valuesSmallerThan, res) {
     const result = {}
 
-    for(var partitions of newPartitions.values()) { 
+    for(var partitions of partitions.values()) { 
         for (var [key, value] of partitions) {
             console.log(key + ' = ' + value);
             if (value < valuesSmallerThan) {
@@ -107,13 +103,11 @@ const searchForValues = (req, res, next) => {
 app.use(bodyParser.json())
 app.get('/scan', searchForValues)
 
-app.get('/keys/:key', (req, res, next) =>  { 
+app.get('/keys/:partition/:key', (req, res, next) =>  { 
     const key = req.params.key
+    const partitionIndex = getPartitionIndex(req, next)
 
-    const partition = getPartition(key, next)
-
-    const value = partition.get(key)
-    console.log("Value " + value) //todo: borrar
+    const value = partitions.get(partitionIndex).get(key)
     if (value === undefined) return next(new Error('Key not found'))
 
     const result = {}
@@ -122,15 +116,20 @@ app.get('/keys/:key', (req, res, next) =>  {
 }
 )
 
-app.post('/keys', insert) 
-app.put('/keys/:key', update)
-app.delete('/keys/:key', remove)
+app.post('/keys/:partition', insert) 
+app.put('/keys/:partition/:key', update)
+app.delete('/keys/:partition/:key', remove)
 
 app.get('/healthcheck', (req, res, next) => { 
 	res.sendStatus(200)
 })
 
 function updateShards(snapshot){
+    partitions.set(0, new Map())
+    partitions.set(1, new Map())
+    partitions.set(2, new Map())
+    maxSizePerPartition = 5 
+    itemMaxSize = 20 
     // TODO: Actualizar nuestros shards para tener solo lo que indique el snapshot para este nodo
 }
 

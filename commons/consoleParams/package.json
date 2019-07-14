@@ -5,7 +5,5 @@
     "main": "consoleParams.js",
     "author": "",
     "license": "ISC",
-    "dependencies": {
-    }
-  }
-  
+    "dependencies": {}
+}
