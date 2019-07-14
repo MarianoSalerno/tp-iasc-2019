@@ -3,7 +3,7 @@ const axios = require('axios');
 const subscribedNodes = new Set()
 
 function addSubscriber(subscriberPort){
-	subscribedNodes += subscriberPort
+	subscribedNodes.add(subscriberPort)
 }
 
 function notifyNewsToAllSubscribers(news){
@@ -29,6 +29,7 @@ function subscribeAs(nodeType, myPort, targetPort){
 	axios.post(`http://localhost:${targetPort}/subscribers/${nodeType}`, {port: myPort}, {timeout: 1000})
 		.then((response) => {
 			console.log(`I'm subscribed to ${targetPort} as ${nodeType}!`)
+			console.log("New Snapshot:", response.data)
 		})
 		.catch((error) => console.log(`Something failed subscribing to ${targetPort}. More info: ${error}`))
 }
@@ -50,5 +51,3 @@ exports.subscriber = {
 	subscribeAsDataNode: partialSubscription("dataNode"),
 	subscribeAsClient: partialSubscription("client")
 }
-
-
