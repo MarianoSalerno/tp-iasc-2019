@@ -1,11 +1,12 @@
-const configuration = require('./consoleParams.js') 
+const config = require('console_params')  
+const subscriptions = require('subscriptions') 
 const express = require('express')
 const bodyParser = require('body-parser')
 const hash = require('./hash-function.js')
 const axios = require('axios');
 const app = express()
 var dataNodes
-// var itemMaxSize
+var orchestrators
 var totalPartitions
 
 function findMasterOrchestrator() {
@@ -14,16 +15,23 @@ function findMasterOrchestrator() {
 		.then((response) => {
 			console.log(`Registered client node to ${ip}!`)
 			dataNodes = response.data.shards
-			// itemMaxSize = response.data.dataConfiguration.itemMaxSize esto debería sólo chequearlo el datanode?
-			totalPartitions = response.data.totalPartitions
+			itemMaxSize = response.data.orchestrators
+			totalPartitions -= response.data.totalPartitions
 		})
 		.catch((error) => console.log(`Error: Orchestrator ${ip} response: ${error}`))
 	}
 }
-findMasterOrchestrator()
 
 function getDatanodePathByPartition(partition) {
 	return dataNodes.filter((x) => x.partitions.from <= partition && partition <= x.partitions.to)[0]['path']
+}
+
+function getDatanodesInformation(snapshot) {
+	dataNodes = snapshot.shards
+	totalPartitions = snapshot.totalPartitions
+	orchestrators = snapshot.orchestrators
+	
+	console.log(`Config updated. dataNodes: ${dataNodes}. TotalPartitions: ${totalPartitions}. Orchestrators: ${orchestrators}`)
 }
 
 app.use( bodyParser.json() );
@@ -95,5 +103,5 @@ app.get('/delete/:key', (req, res, next) => {
 		findMasterOrchestrator()
 	}
 })
-
-app.listen(configuration.port, () => console.log(`Cliente levantado en el puerto: ${configuration.port}!`))
+subscriptions.subscriber.subscribeAsClient(app, config.port, config.masterPort, getDatanodesInformation)
+app.listen(config.port, () => console.log(`Cliente levantado en el puerto: ${config.port}!`))
