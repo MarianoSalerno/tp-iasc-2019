@@ -6,17 +6,17 @@ const hash = require('./hash-function.js')
 const axios = require('axios');
 const app = express()
 var dataNodes
-var orchestrators
+var replacementOrchestrators
 var totalPartitions
 
 function findMasterOrchestrator() {
-	for (let ip of configuration.orchestrators) {
+	for (let ip of replacementOrchestrators) {
 		axios.post(`${ip}/subscribers/client`)
 		.then((response) => {
 			console.log(`Registered client node to ${ip}!`)
 			dataNodes = response.data.shards
-			itemMaxSize = response.data.orchestrators
-			totalPartitions -= response.data.totalPartitions
+			replacementOrchestrators = response.data.orchestrators.replacementsInOrder
+			totalPartitions = response.data.totalPartitions
 		})
 		.catch((error) => console.log(`Error: Orchestrator ${ip} response: ${error}`))
 	}
@@ -45,69 +45,45 @@ app.get('/get/:key', (req, res, next) => {
 		axios.get(`${datanodeIp}/keys/${partition}/${key}`)
 		.then((response) => {
 			console.log(`Insertion: ${response.data}`)
-			res.json(response)
+			res.json(response.data)
 		})
 		.catch((error) => {
 			console.log(`ERROR: ${error}`)
-			res.json(error)
+			res.status(400).json(error)
 		})
 	} catch(e) {
-		console.log(`No configuration found; trying to reconnect master orchestrator`)
 		findMasterOrchestrator()
+		res.status(404).json({"error": "No configuration found; trying to reconnect master orchestrator. Try again in a few seconds"})
 	}
 })
-
-app.get('/insert/:key/:value', (req, res, next) => {
+const upsert = (req, res, next) => {
 	try {
 		const key = req.params.key
 		const value = req.params.value
 		partition = hash.getPartitionFromKey(totalPartitions, key)
 		datanodeIp = getDatanodePathByPartition(partition)
-		axios.post(`${datanodeIp}/keys`, 
+		axios.post(`${datanodeIp}/keys/${partition}`, 
 			{
-				'key': key,
-				'value': value,
-				'partition': partition
+				"key": key,
+				"value": value
 			}
 		)
 		.then((response) => {
 			console.log(`Insertion: ${response.data}`)
-			res.json(response)
+			res.json(response.data)
 		})
 		.catch((error) => {
 			console.log(`ERROR: ${error}`)
-			res.json(error)
+			res.status(404).json({"error": `Data node storing partition ${partition} not available at the moment`})
 		})
 	} catch(e) {
-		console.log(`No configuration found; trying to reconnect master orchestrator`)
 		findMasterOrchestrator()
+		res.status(404).json({"error": "No configuration found; trying to reconnect master orchestrator. Try again in a few seconds"})
 	}
-})
+}
 
-app.get('/update/:key/:value', (req, res, next) => {
-	try {
-		const key = req.params.key
-		const value = req.params.value
-		partition = hash.getPartitionFromKey(totalPartitions, key)
-		datanodeIp = getDatanodePathByPartition(partition)
-		axios.put(`${datanodeIp}/keys/${partition}/${key}`, 
-			{
-				'value': value
-			}
-		)
-		.then((response) => {
-			console.log(`Insertion: ${response.data}`)
-			res.json(response)
-		})
-		.catch((error) => {
-			console.log(`ERROR: ${error}`)
-			res.json(error)
-		})
-	} catch(e) {
-		console.log(`No configuration found; trying to reconnect master orchestrator`)
-		findMasterOrchestrator()
-	}
-})
+app.get('/insert/:key/:value', upsert)
+app.get('/update/:key/:value', upsert)
 
 app.get('/delete/:key', (req, res, next) => {
 	try {
@@ -115,8 +91,14 @@ app.get('/delete/:key', (req, res, next) => {
 		partition = hash.getPartitionFromKey(totalPartitions, key)
 		datanodeIp = getDatanodePathByPartition(partition)
 		axios.delete(`${datanodeIp}/keys/${partition}/${key}`)
-		.then((response) => console.log(`Deletion: ${response.data}`))
-		.catch((error) => console.log(`ERROR: ${error}`))
+		.then((response) => {
+			console.log(`Deletion: ${response.data}`)
+			res.json(response.data)
+		})
+		.catch((error) => {
+			console.log(`ERROR: ${error}`)
+			res.json({"error": `Data node storing partition ${partition} not available at the moment`})
+		})
 	} catch(e) {
 		console.log(`No configuration found; trying to reconnect master orchestrator`)
 		findMasterOrchestrator()
