@@ -29,7 +29,7 @@ function subscribeAs(nodeType, myPort, targetPort){
 	axios.post(`http://localhost:${targetPort}/subscribers/${nodeType}`, {port: myPort}, {timeout: 1000})
 		.then((response) => {
 			console.log(`I'm subscribed to ${targetPort} as ${nodeType}!`)
-			console.log("New Snapshot:", response.data)
+			console.log("New Snapshot:", response.data) // TODO: Hacer algo con el snapshot recibido. Podemos guardarlo y ya, o bien, tener un callback y hacer alguna cosa más loca
 		})
 		.catch((error) => console.log(`Something failed subscribing to ${targetPort}. More info: ${error}`))
 }
