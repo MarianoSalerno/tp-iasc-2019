@@ -11,7 +11,7 @@ function notifyNewsToAllSubscribers(news){
 	subscribedNodes.forEach((node) => {
 		axios.post(`http://localhost:${node}/news`, news, {timeout: 1000})
 		.then((response) => {
-			console.log(`News sended to ${node}!`)
+			console.log(`News sent to ${node}!`)
 		})
 		.catch((error) => console.log(`Something failed sending news to ${node} on path ${path}. More info: ${error}`))
 	})
@@ -74,6 +74,6 @@ exports.publisher = {
 */
 exports.subscriber = {
 	subscribeAsOrchestrator: partialSubscription("orchestrator"),
-	subscribeAsDataNode: partialSubscription("dataNode"),
+	subscribeAsDataNode: partialSubscription("data"),
 	subscribeAsClient: partialSubscription("client")
 }

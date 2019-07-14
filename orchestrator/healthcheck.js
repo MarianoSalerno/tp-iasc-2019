@@ -1,5 +1,5 @@
 const axios = require('axios');
-const subscriptions = require('./subscriptions.js')  
+const subscriptions = require('subscriptions')  
 
 const observedNodes = new Set()
 

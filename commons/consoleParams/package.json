@@ -1,0 +1,11 @@
+{
+    "name": "console_params",
+    "version": "1.0.0",
+    "description": "Permitir parámetros al iniciar cada nodo, siendo éstos su Puerto, y el Puerto del Orquestador Master",
+    "main": "consoleParams.js",
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+    }
+  }
+  

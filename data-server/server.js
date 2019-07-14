@@ -1,7 +1,8 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const hash = require('./hash-function.js')
-const config = require('./consoleParams.js')  
+const config = require('console_params') 
+const subscriptions = require('subscriptions')  
 const app = express()
 const localIp = require('internal-ip')
 const axios = require('axios')
@@ -129,22 +130,10 @@ app.get('/healthcheck', (req, res, next) => {
 
 //app.get('/partitions', updatePartitionsAccepted) todo
 
-function registerToOrchestrator() {
-    axios.post(`http://${config.orchestratorIp}:${config.orchestratorPort}/subscribe/data`, {ip: localIp.v4.sync(), port: config.port})
-		.then((response) => {
-            //todo: parse  config
-			console.log(`Registered data node to !`)
-		})
-		.catch((error) => console.log(`Something failed subscribing to Orchestrator (IP: ${config.orchestratorIp}, Port: ${config.orchestratorPort}). More info: ${error}`))
+function updateShards(snapshot){
+    // TODO: Actualizar nuestros shards para tener solo lo que indique el snapshot para este nodo
 }
 
-//registerToOrchestrator()
+subscriptions.subscriber.subscribeAsDataNode(app, config.port, config.masterPort, updateShards)
 
 app.listen(config.port, () => console.log(`Data node listening on port ${config.port}!`))
-
-app.get('/healthcheck',(req, res, next) => { 
-	// Hoy devuelve 200, pero los nodos de datos podrían tener lógica diferente de los orquestadores para verificar que están vivos y funcionan bien
-	res.sendStatus(200)
-}) 
-
-app.listen(port, () => console.log(`Example app listening on port ${port}!`))

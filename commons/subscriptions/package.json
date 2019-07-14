@@ -1,0 +1,12 @@
+{
+    "name": "subscriptions",
+    "version": "1.0.0",
+    "description": "Permite poder suscribirnos al orquestador activo cuando se inicializa el nodo",
+    "main": "subscriptions.js",
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "axios": "^0.19.0",
+        "console_params": "file:../consoleParams"
+    }
+}

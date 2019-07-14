@@ -2,9 +2,9 @@ const express = require('express')
 const bodyParser = require('body-parser') 
 const app = express() 
 
-const consoleParams = require('./consoleParams.js')  
+const consoleParams = require('console_params')  
 
-const subscriptions = require('./subscriptions.js')  
+const subscriptions = require('subscriptions')  
 const cluster = require('./cluster.js')  
 
 function changeMasterOrchestrator() { 

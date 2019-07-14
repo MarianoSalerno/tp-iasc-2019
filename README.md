@@ -130,3 +130,25 @@ Son los responsables de saber el mappeo mencionado más arriba, y de avisarles a
 * Si se detecta alguna caída de un nodo de datos (a definir), o si se agrega un nodo de datos, se les avisa:
   * A los nodos de datos, qué particiones tienen que aceptar de ahora en más.
   * A los clientes, la nueva distribución de particiones completa.
+
+## Cómo configurar y levantar los nodos.
+
+1) Instalar las dependencias (`npm i`) dentro del módulo /commons/subscriptions, ya que internamente usa axios. Y los 3 tipos de nodos dependen de subscriptions
+
+2) Iniciar los orquestadores. Entrar a la carpeta orchestrator, y hacer lo siguiente:
+`npm i`
+`npm run dev 8000 8000` # Nodo con puerto 8000, indicando que el master es ese mismo puerto (así se "autoconfigura" como master)
+`npm run dev 8001 8000` # Slave 1 en 8001, indicando que el master está en el 8000 (se "autoconfigura" como slave)
+`npm run dev 8002 8000` # Slave 2 en 8002
+
+3) Iniciar los nodos de datos, suscriptos al master actual. Ir a la carpeta de data-server y:
+`npm i`
+`npm run dev 5000 8000`
+`npm run dev 5001 8000`
+`npm run dev 5002 8000`
+
+4) Iniciar los nodos client. Ir a la carpeta cliente, y:
+`npm i`
+`npm run dev 3000 8000`
+`npm run dev 3001 8000`
+`npm run dev 3002 8000`

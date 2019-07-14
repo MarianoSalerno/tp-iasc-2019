@@ -1,6 +1,6 @@
 const configuration = require('./conf.js')  
-const subscriptions = require('./subscriptions.js')  
-const consoleParams = require('./consoleParams.js')  
+const subscriptions = require('subscriptions')  
+const consoleParams = require('console_params')  
 
 var snapshot // Si es master, lo inicializa. Si no, se suscribe y espera a que el master le diga cómo quedó configurado
 
@@ -43,7 +43,12 @@ function changeToMaster(){
 }
 
 function initAsSlave(app){
-	subscriptions.subscriber.subscribeAsOrchestrator(app, consoleParams.port, consoleParams.masterPort)
+	subscriptions.subscriber.subscribeAsOrchestrator(app, consoleParams.port, consoleParams.masterPort, (newSnapshot) => { 
+		/* 
+		TODO: Pisar el snapshot actual. Y calcular quiénes son los suscriptores.
+		Así, si de repente este nodo se convierte en master, que sepa el estado actual del cluster y a quiénes avisarles de las novedades.
+		*/
+	})
 }
 
 function init(app){
