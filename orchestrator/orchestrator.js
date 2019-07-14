@@ -19,7 +19,7 @@ app.get('/healthcheck',(req, res, next) => {
 }) 
 
 const validNodeTypes = new Set(["orchestrator", "data", "client"])
-app.post('/subscribers/:type', (req, res, next) => { 
+app.post('/subscribers/:type', (req, res, next) => {
 	const type = req.params.type
 	if (!validNodeTypes.has(type)){
 		let message = `What is a ${type}? I don't know that kind of node!`
@@ -27,6 +27,7 @@ app.post('/subscribers/:type', (req, res, next) => {
 		res.status(400).json({error: message})
 	} else {
 		const subscriberPort = req.body.port
+		//const subscriberIp = req.body.ip TODO: agregar IP
 		subscriptions.publisher.addSubscriber(subscriberPort)
 		// cluster.addSubscriber(subscriberPort) // TODO: Agregarlo con el tipo correcto, para que se sume al snapshot
 		console.log(cluster.getSnapshot())

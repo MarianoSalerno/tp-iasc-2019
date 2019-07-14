@@ -13,7 +13,9 @@ const newPartitions = new Map() //indexado por numero de particion presente --> 
 newPartitions.set(0, new Map())
 newPartitions.set(1, new Map())
 newPartitions.set(2, new Map())
-const maxSizePartition = 4
+
+let maxSizePerPartition
+let itemMaxSize
 
 function getPartition(key, next) {
     const partitionIndex = hash.getPartitionFromKey(totalPartitions, key)
@@ -46,7 +48,7 @@ const insert = (req, res, next) => {
     upsert(key, req, res, next)
 }
 
-const isTooBig = (keyOrValue) => keyOrValue.length > 10 //todo: sacarlo de la conexion con el orquestador
+const isTooBig = (keyOrValue) => keyOrValue.length > itemMaxSize
 
 const remove = (req, res, next) => {
     const key = req.params.key
@@ -126,9 +128,7 @@ app.delete('/keys/:key', remove)
 
 app.get('/healthcheck', (req, res, next) => { 
 	res.sendStatus(200)
-}) 
-
-//app.get('/partitions', updatePartitionsAccepted) todo
+})
 
 function updateShards(snapshot){
     // TODO: Actualizar nuestros shards para tener solo lo que indique el snapshot para este nodo

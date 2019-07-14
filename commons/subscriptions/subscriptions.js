@@ -2,7 +2,7 @@ const axios = require('axios');
 
 const subscribedNodes = new Set()
 
-function addSubscriber(subscriberPort){
+function addSubscriber(subscriberPort) {
 	subscribedNodes.add(subscriberPort)
 }
 
