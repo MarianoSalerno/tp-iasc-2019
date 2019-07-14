@@ -135,3 +135,10 @@ function registerToOrchestrator() {
 registerToOrchestrator()
 
 app.listen(config.port, () => console.log(`Data node listening on port ${config.port}!`))
+
+app.get('/healthcheck',(req, res, next) => { 
+	// Hoy devuelve 200, pero los nodos de datos podrían tener lógica diferente de los orquestadores para verificar que están vivos y funcionan bien
+	res.sendStatus(200)
+}) 
+
+app.listen(port, () => console.log(`Example app listening on port ${port}!`))
