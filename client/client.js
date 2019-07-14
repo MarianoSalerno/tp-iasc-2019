@@ -41,9 +41,16 @@ app.get('/get/:key', (req, res, next) => {
 		const key = req.params.key
 		partition = hash.getPartitionFromKey(totalPartitions, key)
 		datanodeIp = getDatanodePathByPartition(partition)
+		console.log(`${datanodeIp}/keys/${partition}/${key}`)
 		axios.get(`${datanodeIp}/keys/${partition}/${key}`)
-		.then((response) => console.log(`Value: ${response.data}`))
-		.catch((error) => console.log(`ERROR: ${error}`))
+		.then((response) => {
+			console.log(`Insertion: ${response.data}`)
+			res.json(response)
+		})
+		.catch((error) => {
+			console.log(`ERROR: ${error}`)
+			res.json(error)
+		})
 	} catch(e) {
 		console.log(`No configuration found; trying to reconnect master orchestrator`)
 		findMasterOrchestrator()
@@ -63,8 +70,14 @@ app.get('/insert/:key/:value', (req, res, next) => {
 				'partition': partition
 			}
 		)
-		.then((response) => console.log(`Insertion: ${response.data}`))
-		.catch((error) => console.log(`ERROR: ${error}`))
+		.then((response) => {
+			console.log(`Insertion: ${response.data}`)
+			res.json(response)
+		})
+		.catch((error) => {
+			console.log(`ERROR: ${error}`)
+			res.json(error)
+		})
 	} catch(e) {
 		console.log(`No configuration found; trying to reconnect master orchestrator`)
 		findMasterOrchestrator()
@@ -82,8 +95,14 @@ app.get('/update/:key/:value', (req, res, next) => {
 				'value': value
 			}
 		)
-		.then((response) => console.log(`Update: ${response.data}`))
-		.catch((error) => console.log(`ERROR: ${error}`))
+		.then((response) => {
+			console.log(`Insertion: ${response.data}`)
+			res.json(response)
+		})
+		.catch((error) => {
+			console.log(`ERROR: ${error}`)
+			res.json(error)
+		})
 	} catch(e) {
 		console.log(`No configuration found; trying to reconnect master orchestrator`)
 		findMasterOrchestrator()
