@@ -1,4 +1,3 @@
-//client configurations 
 exports.dataNodes = [ 
     { 
         'path': 'http://localhost:5001', 
@@ -30,6 +29,5 @@ exports.dataNodes = [
     }
 ] 
 exports.totalPartitions = 64
-exports.maxSize = 10
-//data nodes configurations 
-exports.maxStorage = 5
+exports.itemMaxSize = 20
+exports.maxStoragePerPartition = 2

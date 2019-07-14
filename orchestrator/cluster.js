@@ -4,16 +4,15 @@ const consoleParams = require('console_params')
 
 var snapshot // Si es master, lo inicializa. Si no, se suscribe y espera a que el master le diga cómo quedó configurado
 
-function getSnapshot(){
+function getSnapshot() {
 	return snapshot
 }
 
-function setSnapshot(newSnapshot){
+function setSnapshot(newSnapshot) {
 	snapshot = newSnapshot
-
 }
 
-function addDataNode(port){
+function addDataNode(port) {
 	// TODO: Primero ver que no esté agregado aún. Si no está, redividir los shards, y enviar a los suscriptores el nuevo snapshot
 }
 
@@ -22,8 +21,8 @@ var thisIsMaster = false
 function initAsMaster(){
 	snapshot = {
 		dataConfiguration: {
-			itemMaxSize: configuration.maxSize,
-			maxStoragePerNode: configuration.maxStorage
+			itemMaxSize: configuration.itemMaxSize,
+			maxStoragePerPartition: configuration.maxStoragePerPartition
 		},
 		orchestrators: {
 			master: consoleParams.masterPort,

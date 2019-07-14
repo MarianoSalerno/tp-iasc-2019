@@ -17,14 +17,20 @@ function getPartitionIndex(req, next) {
     return partitionIndex
 }
 
+function partitionHasEnoughSpace(partition) {
+    return partition.size < maxSizePerPartition
+}
+
 const upsert = (key, req, res, next) => {
     const value = req.body.value
+
+    if (isTooBig(key)) return next(new Error('Key is too large'))
+    if (isTooBig(value)) return next(new Error('Value is too large'))
     const partitionIndex = getPartitionIndex(req, next)
-
-    if (isTooBig(key)) return next(new Error('Key supera tamaño maximo'))
-    if (isTooBig(value)) return next(new Error('Value supera tamaño maximo'))
-
     const partition = partitions.get(partitionIndex)
+    
+    if (!partitionHasEnoughSpace(partition)) return next(new Error(`Partition ${partitionIndex} does not have enough space to store another pair.`))
+    
     partition.set(key, value)
     
 	res.json({ response : 'ok' })
@@ -122,7 +128,7 @@ app.get('/healthcheck', (req, res, next) => {
 
 function updateShards(snapshot) {
     itemMaxSize = snapshot.dataConfiguration.itemMaxSize
-    maxSizePerPartition = snapshot.dataConfiguration.maxStoragePerNode
+    maxSizePerPartition = snapshot.dataConfiguration.maxStoragePerPartition
     const shards = snapshot.shards
     const nodePath = new String(`http://localhost:${config.port}`);
    
