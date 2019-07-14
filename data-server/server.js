@@ -24,8 +24,19 @@ function partitionHasEnoughSpace(partition) {
     return partition.size < maxSizePerPartition
 }
 
-const upsert = (key, req, res, next) => {
+const upsert = (req, res, next) => {
+    const key = req.body.key
     const value = req.body.value
+
+    if(key === undefined) {
+        res.status(400).json({"response" : "Key is missing"})
+        return
+    }
+
+    if(value === undefined) {
+        res.status(400).json({"response" : "Value is missing"})
+        return
+    }
 
     if (isTooBig(key)) {
         res.status(400).json({"response" : "Key is too large"})
@@ -50,16 +61,6 @@ const upsert = (key, req, res, next) => {
     console.log(`New pair inserted. Key: ${key}. Value: ${value}`)
     
 	res.json({ response : 'ok' })
-}
-
-const update = (req, res, next) => {
-    const key = req.params.key 
-    upsert(key, req, res, next)
-}
-
-const insert = (req, res, next) => {
-    const key = req.body.key 
-    upsert(key, req, res, next)
 }
 
 const isTooBig = (keyOrValue) => keyOrValue.length > itemMaxSize
@@ -142,8 +143,7 @@ app.get('/keys/:partition/:key', (req, res, next) =>  {
 }
 )
 
-app.post('/keys/:partition', insert) 
-app.put('/keys/:partition/:key', update)
+app.post('/keys/:partition', upsert) 
 app.delete('/keys/:partition/:key', remove)
 
 app.get('/healthcheck', (req, res, next) => { 
