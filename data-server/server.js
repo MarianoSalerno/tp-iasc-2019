@@ -3,6 +3,8 @@ const bodyParser = require('body-parser')
 const hash = require('./hash-function.js')
 const config = require('./consoleParams.js')  
 const app = express()
+const localIp = require('internal-ip')
+const axios = require('axios')
 
 //todo: todo esto deberia pasarse por parametro
 const totalPartitions = 3
@@ -125,14 +127,18 @@ app.get('/healthcheck', (req, res, next) => {
 	res.sendStatus(200)
 }) 
 
-
 //app.get('/partitions', updatePartitionsAccepted) todo
 
 function registerToOrchestrator() {
-
+    axios.post(`http://${config.orchestratorIp}:${config.orchestratorPort}/subscribe/data`, {ip: localIp.v4.sync(), port: config.port})
+		.then((response) => {
+            //todo: parse  config
+			console.log(`Registered data node to !`)
+		})
+		.catch((error) => console.log(`Something failed subscribing to Orchestrator (IP: ${config.orchestratorIp}, Port: ${config.orchestratorPort}). More info: ${error}`))
 }
 
-registerToOrchestrator()
+//registerToOrchestrator()
 
 app.listen(config.port, () => console.log(`Data node listening on port ${config.port}!`))
 
