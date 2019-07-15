@@ -104,5 +104,9 @@ app.get('/delete/:key', (req, res, next) => {
 		findMasterOrchestrator()
 	}
 })
-subscriptions.subscriber.subscribeAsClient(app, config.port, config.masterPort, getDatanodesInformation)
-app.listen(config.port, () => console.log(`Cliente levantado en el puerto: ${config.port}!`))
+
+function startApplication() {
+	app.listen(config.port, () => console.log(`Cliente levantado en el puerto: ${config.port}!`))
+}
+
+subscriptions.subscriber.subscribeAsClient(app, config.port, config.masterPort, getDatanodesInformation, startApplication)

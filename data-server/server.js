@@ -177,7 +177,8 @@ function updateShards(snapshot) {
     console.log(`Partitions accepted ${Array.from(partitions.keys())}`)
 }
 
-subscriptions.subscriber.subscribeAsDataNode(app, config.port, config.masterPort, updateShards)
+function startApplication() {
+    app.listen(config.port, () => console.log(`Data node listening on port ${config.port}!`)) 
+}
 
-app.listen(config.port, () => console.log(`Data node listening on port ${config.port}!`)) 
-//TODO: que solo se haga si el nodo puede iniciar bien, pasarlo como callback del subscribe
+subscriptions.subscriber.subscribeAsDataNode(app, config.port, config.masterPort, updateShards, startApplication)
