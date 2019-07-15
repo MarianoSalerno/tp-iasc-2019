@@ -1,6 +1,7 @@
 const configuration = require('./conf.js')  
 const subscriptions = require('subscriptions')  
-const consoleParams = require('console_params')  
+const consoleParams = require('console_params')
+const orchestrator = require('./orchestrator.js') 
 
 var snapshot // Si es master, lo inicializa. Si no, se suscribe y espera a que el master le diga cómo quedó configurado
 
@@ -12,13 +13,33 @@ function setSnapshot(newSnapshot) {
 	snapshot = newSnapshot
 }
 
-function addDataNode(port) {
-	// TODO: Primero ver que no esté agregado aún. Si no está, redividir los shards, y enviar a los suscriptores el nuevo snapshot
+function addSubscriber(type, subscriberPort) {
+	if(type === "orchestrator") {
+		snapshot.orchestrators.replacementsInOrder.push(subscriberPort)
+		return
+	}
+
+	if(type === "client") {
+		snapshot.clientsConnected.push(subscriberPort)
+		return
+	}
+
+	if(type === "data") {
+		const shards = snapshot.shards
+		const node = shards.find(element => {
+			const nodePath = new String(`http://localhost:${subscriberPort}`);
+			const elementPath = new String(element.path);
+			return JSON.stringify(nodePath) === JSON.stringify(elementPath);
+		});
+		node.available = true
+		return
+	}
 }
+
 
 var thisIsMaster = false
 
-function initAsMaster(){
+function initAsMaster(app){
 	snapshot = {
 		dataConfiguration: {
 			itemMaxSize: configuration.itemMaxSize,
@@ -29,9 +50,16 @@ function initAsMaster(){
 			replacementsInOrder: []
 		},
 		shards: configuration.dataNodes,
-		totalPartitions: configuration.totalPartitions
+		totalPartitions: configuration.totalPartitions,
+		clientsConnected: []
 	}
+
 	console.log("Cluster initialized. Waiting subscribers in /subscribers/:type to send news!")
+	startApplication()
+}
+
+function startApplication() {
+	orchestrator.startApplication
 }
 
 function thisIsMaster() {
@@ -39,20 +67,21 @@ function thisIsMaster() {
 }
 
 function changeToMaster(){
-	setSnapshot.orchestrators.master = setSnapshot.orchestrators.replacementsInOrder.pop()
+	snapshot.orchestrators.master = snapshot.orchestrators.replacementsInOrder.pop()
 }
 
-function initAsSlave(app){
-	subscriptions.subscriber.subscribeAsOrchestrator(app, consoleParams.port, consoleParams.masterPort, (newSnapshot) => { 
+function initAsSlave(app) {
+	subscriptions.subscriber.subscribeAsOrchestrator(app, consoleParams.port, consoleParams.masterPort, (newSnapshot) => {
+		setSnapshot(newSnapshot)
 		/* 
 		TODO: Pisar el snapshot actual. Y calcular quiénes son los suscriptores.
 		Así, si de repente este nodo se convierte en master, que sepa el estado actual del cluster y a quiénes avisarles de las novedades.
 		*/
-	})
+	}, startApplication)
 }
 
 function init(app){
-	consoleParams.port == consoleParams.masterPort ? initAsMaster() : initAsSlave(app)
+	consoleParams.port == consoleParams.masterPort ? initAsMaster(app) : initAsSlave(app)
 }
 
 exports.thisIsMaster = thisIsMaster
@@ -61,5 +90,5 @@ exports.init = init
 exports.getSnapshot = getSnapshot
 exports.setSnapshot = setSnapshot
 
-exports.addDataNode = addDataNode
 exports.changeToMaster = changeToMaster
+exports.addSubscriber = addSubscriber

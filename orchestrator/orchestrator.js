@@ -19,6 +19,7 @@ app.get('/healthcheck',(req, res, next) => {
 }) 
 
 const validNodeTypes = new Set(["orchestrator", "data", "client"])
+
 app.post('/subscribers/:type', (req, res, next) => {
 	const type = req.params.type
 	if (!validNodeTypes.has(type)){
@@ -27,11 +28,10 @@ app.post('/subscribers/:type', (req, res, next) => {
 		res.status(400).json({error: message})
 	} else {
 		const subscriberPort = req.body.port
-		//const subscriberIp = req.body.ip TODO: agregar IP
 		subscriptions.publisher.addSubscriber(subscriberPort)
-		// cluster.addSubscriber(subscriberPort) // TODO: Agregarlo con el tipo correcto, para que se sume al snapshot
+		cluster.addSubscriber(type, subscriberPort)
 		console.log(cluster.getSnapshot())
-		console.log(`New subscription from ${type} node!`)
+		console.log(`New subscription from ${type} node. Port: ${subscriberPort}!`)
 		res.send(cluster.getSnapshot())
 	}
 })
@@ -40,6 +40,10 @@ process.on('exit', () => {
     changeMasterOrchestrator() 
 }) 
 
-cluster.init(app) 
+cluster.init(app)
 
-app.listen(consoleParams.port, () => console.log(`Orquestrator working on port: ${consoleParams.port}!`))
+function startApplication(app) {
+	app.listen(consoleParams.port, () => console.log(`Orquestrator working on port: ${consoleParams.port}!`))
+}
+
+exports.startApplication = startApplication(app)
