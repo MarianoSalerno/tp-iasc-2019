@@ -25,13 +25,13 @@ function acceptNews(app, whatToDoWhithNewShapshot){
 	}) 
 }
 
-function subscribeAs(nodeType, myPort, targetPort, whatToDoWhithNewShapshot, startApplication){
+function subscribeAs(nodeType, myPort, targetPort, whatToDoWhithNewShapshot, startApplication, app){
 	axios.post(`http://localhost:${targetPort}/subscribers/${nodeType}`, {port: myPort}, {timeout: 1000})
 		.then((response) => {
 			console.log(`I'm subscribed to ${targetPort} as ${nodeType}!`)
 			console.log("New Snapshot:", response.data)
 			whatToDoWhithNewShapshot(response.data)
-			startApplication()
+			startApplication(app)
 		})
 		.catch((error) => console.log(`Something failed subscribing to ${targetPort}. More info: ${error}`))
 }
@@ -39,7 +39,7 @@ function subscribeAs(nodeType, myPort, targetPort, whatToDoWhithNewShapshot, sta
 function partialSubscription(nodeType){
 	return (app, myPort, targetPort, whatToDoWhithNewShapshot, startApplication) => {
 		acceptNews(app, whatToDoWhithNewShapshot)
-		subscribeAs(nodeType, myPort, targetPort, whatToDoWhithNewShapshot, startApplication)
+		subscribeAs(nodeType, myPort, targetPort, whatToDoWhithNewShapshot, startApplication, app)
 	}
 }
 

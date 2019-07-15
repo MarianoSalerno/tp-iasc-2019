@@ -41,9 +41,3 @@ process.on('exit', () => {
 }) 
 
 cluster.init(app)
-
-function startApplication(app) {
-	app.listen(consoleParams.port, () => console.log(`Orquestrator working on port: ${consoleParams.port}!`))
-}
-
-exports.startApplication = startApplication(app)

@@ -105,7 +105,7 @@ app.get('/delete/:key', (req, res, next) => {
 	}
 })
 
-function startApplication() {
+function startApplication(app) {
 	app.listen(config.port, () => console.log(`Cliente levantado en el puerto: ${config.port}!`))
 }
 

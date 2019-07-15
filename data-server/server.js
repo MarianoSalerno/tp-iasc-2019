@@ -177,7 +177,7 @@ function updateShards(snapshot) {
     console.log(`Partitions accepted ${Array.from(partitions.keys())}`)
 }
 
-function startApplication() {
+function startApplication(app) {
     app.listen(config.port, () => console.log(`Data node listening on port ${config.port}!`)) 
 }
 
