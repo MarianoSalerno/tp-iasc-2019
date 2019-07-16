@@ -1,20 +1,36 @@
 const axios = require('axios');
 
-const subscribedNodes = new Set()
+const subscribedNodes = new Map()
 
-function addSubscriber(subscriberPort) {
-	subscribedNodes.add(subscriberPort)
+function initSubscriptions() {
+	subscribedNodes.set("orchestrator", new Set())
+	subscribedNodes.set("data", new Set())
+	subscribedNodes.set("client", new Set())
+	console.log("Subscriptions initialized")
 }
 
-function notifyNewsToAllSubscribers(news){
+function addSubscriber(type, subscriberPort) {
+	const subscribed = subscribedNodes.get(type)
+	subscribed.add(subscriberPort)
+}
+
+function removeSubscriber(type, subscriberPort) {
+	const subscribed = subscribedNodes.get(type)
+	subscribed.delete(subscriberPort)
+}
+
+function notifyNewsToAllSubscribers(news) {
 	console.log("Sending news: ", news)
-	subscribedNodes.forEach((node) => {
-		axios.post(`http://localhost:${node}/news`, news, {timeout: 1000})
-		.then((response) => {
-			console.log(`News sent to ${node}!`)
+
+	for (var [type, ports] of subscribedNodes) {
+		ports.forEach((node) => {
+			axios.post(`http://localhost:${node}/news`, news, {timeout: 1000})
+			.then((response) => {
+				console.log(`News sent to ${node}!`)
+			})
+			.catch((error) => console.log(`Something failed sending news to ${node}. More info: ${error}`))
 		})
-		.catch((error) => console.log(`Something failed sending news to ${node} on path ${path}. More info: ${error}`))
-	})
+	}
 }
 
 function acceptNews(app, whatToDoWhithNewShapshot){
@@ -26,7 +42,7 @@ function acceptNews(app, whatToDoWhithNewShapshot){
 }
 
 function subscribeAs(nodeType, myPort, targetPort, whatToDoWhithNewShapshot, startApplication, app){
-	axios.post(`http://localhost:${targetPort}/subscribers/${nodeType}`, {port: myPort}, {timeout: 1000})
+	axios.post(`http://localhost:${targetPort}/subscribers/${nodeType}`, {port: myPort}) //todo: poner timeout de 1000 de nuevo
 		.then((response) => {
 			console.log(`I'm subscribed to ${targetPort} as ${nodeType}!`)
 			console.log("New Snapshot:", response.data)
@@ -78,3 +94,8 @@ exports.subscriber = {
 	subscribeAsDataNode: partialSubscription("data"),
 	subscribeAsClient: partialSubscription("client")
 }
+
+exports.initSubscriptions = initSubscriptions
+exports.notifyNewsToAllSubscribers = notifyNewsToAllSubscribers
+exports.subscribedNodes = subscribedNodes
+exports.removeSubscriber = removeSubscriber

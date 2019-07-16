@@ -35,6 +35,31 @@ function addSubscriber(type, subscriberPort) {
 	}
 }
 
+function removeSubscriber(type, subscriberPort) {	
+	if(type === "orchestrator") {
+		const updatedOrchestrators = snapshot.orchestrators.replacementsInOrder.filter(e => e != subscriberPort);
+		snapshot.orchestrators.replacementsInOrder = updatedOrchestrators;
+		return
+	}
+
+	if(type === "client") {
+		const updatedClients = snapshot.clientsConnected.filter(e => e != subscriberPort);
+		snapshot.clientsConnected = updatedClients;
+		return
+	}
+
+	if(type === "data") {
+		const shards = snapshot.shards
+		const node = shards.find(element => {
+			const nodePath = new String(`http://localhost:${subscriberPort}`);
+			const elementPath = new String(element.path);
+			return JSON.stringify(nodePath) === JSON.stringify(elementPath);
+		});
+		node.available = false
+		return
+	}
+}
+
 
 var thisIsMaster = false
 
@@ -65,7 +90,7 @@ function thisIsMaster() {
 	return snapshot && snapshot.orchestrators.master == consoleParams.port
 }
 
-function changeToMaster(){
+function changeToMaster() {
 	snapshot.orchestrators.master = snapshot.orchestrators.replacementsInOrder.pop()
 }
 
@@ -77,7 +102,8 @@ function initAsSlave(app) {
 	}, startApplication)
 }
 
-function init(app){
+function init(app) {
+	subscriptions.initSubscriptions()
 	consoleParams.port == consoleParams.masterPort ? initAsMaster(app) : initAsSlave(app)
 }
 
@@ -89,3 +115,4 @@ exports.setSnapshot = setSnapshot
 
 exports.changeToMaster = changeToMaster
 exports.addSubscriber = addSubscriber
+exports.removeSubscriber = removeSubscriber

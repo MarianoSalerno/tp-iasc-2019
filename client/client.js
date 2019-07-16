@@ -83,7 +83,6 @@ const upsert = (req, res, next) => {
 }
 
 app.get('/insert/:key/:value', upsert)
-app.get('/update/:key/:value', upsert)
 
 app.get('/delete/:key', (req, res, next) => {
 	try {
@@ -103,6 +102,10 @@ app.get('/delete/:key', (req, res, next) => {
 		console.log(`No configuration found; trying to reconnect master orchestrator`)
 		findMasterOrchestrator()
 	}
+})
+
+app.get('/healthcheck', (req, res, next) => { 
+	res.sendStatus(200)
 })
 
 function startApplication(app) {

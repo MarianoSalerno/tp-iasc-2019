@@ -2,10 +2,9 @@ const express = require('express')
 const bodyParser = require('body-parser') 
 const app = express() 
 
-const consoleParams = require('console_params')  
-
 const subscriptions = require('subscriptions')  
 const cluster = require('./cluster.js')  
+const monitor = require('./monitor.js')  
 
 function changeMasterOrchestrator() { 
   
@@ -28,7 +27,7 @@ app.post('/subscribers/:type', (req, res, next) => {
 		res.status(400).json({error: message})
 	} else {
 		const subscriberPort = req.body.port
-		subscriptions.publisher.addSubscriber(subscriberPort)
+		subscriptions.publisher.addSubscriber(type, subscriberPort)
 		cluster.addSubscriber(type, subscriberPort)
 		console.log(cluster.getSnapshot())
 		console.log(`New subscription from ${type} node. Port: ${subscriberPort}!`)
@@ -41,3 +40,5 @@ process.on('exit', () => {
 }) 
 
 cluster.init(app)
+
+monitor.checkHealthEvery(2)
