@@ -24,7 +24,6 @@ app.post('/subscribers/:type', (req, res, next) => {
 		subscriptions.publisher.addSubscriber(type, subscriberPort)
 		cluster.addSubscriber(type, subscriberPort)
 		console.log(cluster.getSnapshot())
-		console.log(`New subscription from ${type} node. Port: ${subscriberPort}!`)
 		subscriptions.notifyNewsToAllSubscribersExcept(cluster.getSnapshot(), subscriberPort)
 		res.send(cluster.getSnapshot())
 	}

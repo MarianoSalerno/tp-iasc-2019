@@ -12,6 +12,7 @@ function initSubscriptions() {
 function addSubscriber(type, subscriberPort) {
 	const subscribed = subscribedNodes.get(type)
 	subscribed.add(subscriberPort)
+	console.log(`New subscription from ${type} node. Port: ${subscriberPort}!`)
 }
 
 function removeSubscriber(type, subscriberPort) {
