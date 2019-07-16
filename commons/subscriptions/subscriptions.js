@@ -32,9 +32,7 @@ function notifyNewsToAllSubscribersExcept(news, excludedPort) {
 function notifyNewsToAllSubscribers(news) {
 	for (var [type, ports] of subscribedNodes) {
 		ports.forEach((node) => {
-			if (node != excludedPort) {
-				postNews(node, news);
-			}
+			postNews(node, news);
 		})
 	}
 }

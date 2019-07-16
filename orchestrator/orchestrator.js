@@ -4,7 +4,6 @@ const app = express()
 
 const subscriptions = require('subscriptions')
 const cluster = require('./cluster.js')
-const monitor = require('./master_monitor.js')
 
 function changeMasterOrchestrator() {
 
@@ -40,5 +39,3 @@ process.on('exit', () => {
 })
 
 cluster.init(app)
-
-monitor.checkAllNodesHealthEvery(2)

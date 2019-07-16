@@ -3,21 +3,23 @@ const subscriptions = require('subscriptions')
 const cluster = require('./cluster.js')
 const consoleParams = require('console_params') 
 
+var interval 
+
 function copyMasterSubscriptions() {
     subscriptions.initSubscriptions()
     const snapshot = cluster.getSnapshot()
     snapshot.shards.forEach(node => {
-        if(node.available === 'true') { 
-            subscriptions.addSubscriber("data", node.port) 
+        if(node.available === true) { 
+            subscriptions.publisher.addSubscriber("data", node.port) 
         }
     })
 
     snapshot.orchestrators.slaves.forEach(slave => {
-        subscriptions.addSubscriber("orchestrator", slave.port)
+        subscriptions.publisher.addSubscriber("orchestrator", slave.port)
     })
 
     snapshot.clientsConnected.forEach(port => {
-        subscriptions.addSubscriber("client", port)
+        subscriptions.publisher.addSubscriber("client", port)
     })
 }
 
@@ -32,6 +34,7 @@ function checkMasterHealth() {
                     cluster.updateMaster(consoleParams.port)
                     copyMasterSubscriptions()
                     subscriptions.notifyNewsToAllSubscribers(cluster.getSnapshot())
+                    stopMonitoringMaster()
                 } else {
                     console.log(`This slave cannot be master because it does not have the highest priority`)
                 }
@@ -40,7 +43,11 @@ function checkMasterHealth() {
 }
 
 function checkHealthEvery(seconds) {
-    setInterval(checkMasterHealth(), seconds * 1000)
+    interval = setInterval(checkMasterHealth(), seconds * 1000)
+}
+
+function stopMonitoringMaster() {
+    clearInterval(interval)
 }
 
 exports.checkMasterHealthEvery = checkHealthEvery
