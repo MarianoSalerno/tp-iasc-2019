@@ -77,7 +77,7 @@ const upsert = (req, res, next) => {
 		}
 	)
 		.then((response) => {
-			console.log(`Insertion. Data: ${key}-${value}. ${JSON.stringify(response.data)}`)
+			console.log(`Data ${key}-${value} inserted. ${JSON.stringify(response.data)}`)
 			res.json(response.data)
 		})
 		.catch((error) => {
@@ -88,7 +88,7 @@ const upsert = (req, res, next) => {
 
 app.post('/data', upsert)
 
-app.get('/delete/:key', (req, res, next) => {
+app.delete('/data/:key', (req, res, next) => {
 	const key = req.params.key
 	partition = hash.getPartitionFromKey(totalPartitions, key)
 	const nodePort = getDatanodePortByPartition(partition, res, key)
@@ -98,7 +98,7 @@ app.get('/delete/:key', (req, res, next) => {
 
 	axios.delete(`http://localhost:${nodePort}/keys/${partition}/${key}`)
 		.then((response) => {
-			console.log(`Deletion: ${JSON.stringify(response.data)}`)
+			console.log(`Pair with key ${key} deleted. ${JSON.stringify(response.data)}`)
 			res.json(response.data)
 		})
 		.catch((error) => {
