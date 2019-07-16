@@ -1,6 +1,8 @@
 
 # tp-iasc-2019
 
+![image](https://user-images.githubusercontent.com/7246275/61318518-aa660580-a7db-11e9-96cc-1a7d07384692.png)
+
 ## Levantar el proyecto
 
 Entrar en alguna de las carpetas (client, data, manager). Y luego:
@@ -11,6 +13,8 @@ Entrar en alguna de las carpetas (client, data, manager). Y luego:
 ## Particiones
 
 Se divide el espacio de las keys en particiones.
+
+![image](https://user-images.githubusercontent.com/7246275/61318562-be116c00-a7db-11e9-88c8-2f12b4b27daa.png)
 
 Las particiones son agrupaciones lógicas de datos. Podríamos tener, por ejemplo, 30 objetos almacenados en la Partición1, 25 en Partición2, y 40 en Partición3.
 
