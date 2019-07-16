@@ -1,3 +1,17 @@
+
+    Agregar los JSON dentro del Content Manager(cm)
+    Cargar los nuevos jsons desde hooker con el loadContentManager
+    Crear la data class
+    Crear un nuevo endpoint /planes-internet y el nuevo html
+    Crear un nuevo endpoint /tu-plan-internet/:id/:readable-url y el nuevo html
+    Chequear en el paso final de la venta posibles inconsistencias de pedir decos/contratar pack fútbol etc cuando no se tiene televisión.
+
+    Agregar los JSON dentro del Content Manager(cm)
+    Cargar los nuevos jsons desde hooker con el loadContentManager
+    Crear la data class
+    Crear un nuevo endpoint /planes-internet y el nuevo html
+    Crear un nuevo endpoint /tu-plan-internet/:id/:readable-url y el nuevo html
+    Chequear en el paso final de la venta posibles inconsistencias de pedir decos/contratar pack fútbol etc cuando no se tiene televisión.
 # tp-iasc-2019
 
 ## Levantar el proyecto
@@ -40,10 +54,6 @@ Otro más:
 * Nodo5 con 2 particiones.
 
 Y así.
-
-Con el sistema completo, permite:
-- Arrancar con pocos o un nodo de datos, e ir escalando hasta las N particiones definidas, para distribuir la carga.
-- Tener una agrupación lógica de datos, para poder **replicarlas** entre los nodos, y por ende, tener resiliencia.
 
 Una vez configurada la cantidad de particiones, ésta **no puede variar**. Así que conviene configurar una cantidad *holgada* de las mismas.
 
@@ -103,12 +113,17 @@ Son la cara visible para que otros nos hagan consultas. Podría haber un load ba
 
 En principio, entienden:
 Read ( GET /data/:key )
-Upsert ( POST /data/:key )
+Upsert ( POST /data ) { key: key, value: value }
+Delete ( DELETE /data/:key )
+valuesGreaterThan ( GET /valuesgreaterthan?query=value )
+valuesSmallerThan ( GET /valuessmallerthan?query=value )
 
-Lo que hacen es:
+En caso de Read/Upsert/Delete lo que hacen es:
 * Deducir a qué partición va ese dato.
 * A partir de eso, ver qué nodo de datos es el encargado de mantener esa partición.
 * Delegarle la tarea a ese nodo, y responder en función de eso.
+En caso de values-Greater/smaller-Than
+* Lanza una promise a todos los nodos de datos disponibles y recopila resultados
 
 ¿Cómo sabe el mappeo de **partición <-> nodo**?
 
@@ -125,12 +140,9 @@ Partición4 --> Nodo2
 Son los responsables de saber el mappeo mencionado más arriba, y de avisarles a todos los clientes cualquier cambio.
 
 ¿Cómo se conocen con el resto de nodos?
-* Los nodos de datos y clientes, tienen una lista de nodos orquestadores.
-* Al levantarse, se suscriben ante ellos para recibir novedades.
-* El master de los orquestadores les manda la configuración luego de que se suscriben.
-* Si se detecta alguna caída de un nodo de datos (a definir), o si se agrega un nodo de datos, se les avisa:
-  * A los nodos de datos, qué particiones tienen que aceptar de ahora en más.
-  * A los clientes, la nueva distribución de particiones completa.
+* Al levantarse, se suscriben ante el orquestador master para recibir novedades.
+* Dicho orquestador le manda la configuración luego de suscribirse.
+* Si se detecta alguna caída de un nodo de datos, se les avisa a los nodos clientes cuál de ellos pasó a estado "unavailable" así éste no recibe más peticiones.
 
 ## Cómo configurar y levantar los nodos.
 
