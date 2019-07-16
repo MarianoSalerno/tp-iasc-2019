@@ -103,11 +103,11 @@ Para todo esto, cada nodo de datos tiene que saber qué particiones tiene asigna
 Son la cara visible para que otros nos hagan consultas. Podría haber un load balancer adelante de ellos.
 
 En principio, entienden:
-Read ( GET /data/:key )
-Upsert ( POST /data ) { key: key, value: value }
-Delete ( DELETE /data/:key )
-valuesGreaterThan ( GET /valuesgreaterthan?query=value )
-valuesSmallerThan ( GET /valuessmallerthan?query=value )
+* Read ( GET /data/:key )
+* Upsert ( POST /data ) { key: key, value: value }
+* Delete ( DELETE /data/:key )
+* valuesGreaterThan ( GET /valuesgreaterthan?query=value )
+* valuesSmallerThan ( GET /valuessmallerthan?query=value )
 
 En caso de Read/Upsert/Delete lo que hacen es:
 * Deducir a qué partición va ese dato.
