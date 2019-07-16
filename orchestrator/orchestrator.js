@@ -1,30 +1,29 @@
-const express = require('express') 
-const bodyParser = require('body-parser') 
-const app = express() 
+const express = require('express')
+const bodyParser = require('body-parser')
+const app = express()
 
-const subscriptions = require('subscriptions')  
-const cluster = require('./cluster.js')  
-const monitor = require('./monitor.js')  
+const subscriptions = require('subscriptions')
+const cluster = require('./cluster.js')
+const monitor = require('./master_monitor.js')
 
-function changeMasterOrchestrator() { 
-  
-} 
+function changeMasterOrchestrator() {
 
-app.use( bodyParser.json() ); 
+}
 
-app.get('/healthcheck',(req, res, next) => { 
-	// Hoy devuelve 200, pero los orquestadores podrían tener lógica diferente de los nodos de datos para verificar que están vivos y funcionan bien
+app.use(bodyParser.json());
+
+app.get('/healthcheck', (req, res, next) => {
 	res.sendStatus(200)
-}) 
+})
 
 const validNodeTypes = new Set(["orchestrator", "data", "client"])
 
 app.post('/subscribers/:type', (req, res, next) => {
 	const type = req.params.type
-	if (!validNodeTypes.has(type)){
+	if (!validNodeTypes.has(type)) {
 		let message = `What is a ${type}? I don't know that kind of node!`
 		console.log(message)
-		res.status(400).json({error: message})
+		res.status(400).json({ error: message })
 	} else {
 		const subscriberPort = req.body.port
 		subscriptions.publisher.addSubscriber(type, subscriberPort)
@@ -35,11 +34,11 @@ app.post('/subscribers/:type', (req, res, next) => {
 		res.send(cluster.getSnapshot())
 	}
 })
- 
-process.on('exit', () => {   
-    changeMasterOrchestrator() 
-}) 
+
+process.on('exit', () => {
+	changeMasterOrchestrator()
+})
 
 cluster.init(app)
 
-monitor.checkHealthEvery(2)
+monitor.checkAllNodesHealthEvery(2)

@@ -5,12 +5,6 @@ function toInteger(someString) {
 	return possibleInteger
 }
 
-function getOrchestratorIp() {  
-	const ip = process.argv[4]
-	if(ip === undefined) return "localhost"
-	return ip 
-}
-
 const port = toInteger(process.argv[2])
 const masterPort = toInteger(process.argv[3])
 

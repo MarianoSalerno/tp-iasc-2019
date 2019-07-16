@@ -1,6 +1,6 @@
 exports.dataNodes = [ 
     { 
-        'path': 'http://localhost:5001',
+        'port': '5001',
         'available': false, 
         'partitions': { 
             'from': 1, 
@@ -8,7 +8,7 @@ exports.dataNodes = [
         } 
     }, 
     { 
-        'path': 'http://localhost:5002', 
+        'port': '5002', 
         'available': false,
         'partitions': { 
             'from': 17, 
@@ -16,7 +16,7 @@ exports.dataNodes = [
         } 
     }, 
     { 
-        'path': 'http://localhost:5003', 
+        'port': '5003', 
         'available': false,
         'partitions': { 
             'from': 33, 
@@ -24,7 +24,7 @@ exports.dataNodes = [
         } 
     }, 
     { 
-        'path': 'http://localhost:5004', 
+        'port': '5004', 
         'available': false,
         'partitions': { 
             'from': 49, 

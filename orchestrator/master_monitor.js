@@ -23,4 +23,4 @@ function checkHealthEvery(seconds) {
 	setInterval(checkAllNodesHealth(), seconds * 1000)
 }
 
-exports.checkHealthEvery = checkHealthEvery
+exports.checkAllNodesHealthEvery = checkHealthEvery

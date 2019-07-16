@@ -80,15 +80,16 @@ Ejemplo de uso:
 Son los encargados de almacenar sus particiones, y dentro de ellas, los datos.
 
 ### Validación de key
-* Se fijan en cuál partición ponerlo con la función de más arriba.
 * Ven si ellos tienen esa partición entre sus particiones. Si no la tiene, bad request. Ya que otro nodo de datos es el encargado de resolver el pedido.
 
-### Read ( GET /data/:key )
+### Read ( GET /data/:partition/:key )
 * Valida que la key sea correcta. Si es así:
 * Se fija qué valor hay almacenado en esa key dentro de esa partición.
 * Si había algo, se devuelve. Si no había nada, Not Found.
 
-### Upsert ( POST /data/:key )
+### Upsert ( POST /data/:partition/ ) 
+* Body:
+`{ "key": ejemplo, "value": ejemplo"}`
 * Valida que la key sea correcta. Si es así:
 * Asigna ese valor a esa key (la pisa si es que había algo asignado).
 

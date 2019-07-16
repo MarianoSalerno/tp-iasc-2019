@@ -1,6 +1,8 @@
-const configuration = require('./conf.js')  
-const subscriptions = require('subscriptions')  
-const consoleParams = require('console_params') 
+const configuration = require('./conf.js')
+const subscriptions = require('subscriptions')
+const consoleParams = require('console_params')
+const masterMonitor = require('./master_monitor.js')
+const slaveMonitor = require('./slave_monitor.js')
 
 var snapshot // Si es master, lo inicializa. Si no, se suscribe y espera a que el master le diga cómo quedó configurado
 
@@ -13,57 +15,51 @@ function setSnapshot(newSnapshot) {
 }
 
 function addSubscriber(type, subscriberPort) {
-	if(type === "orchestrator") {
-		snapshot.orchestrators.replacementsInOrder.push(subscriberPort)
+	if (type === "orchestrator") {
+		const priority = Math.floor((Math.random() * 100) + 1)
+		snapshot.orchestrators.slaves.push({ port: subscriberPort, priority: priority })
 		return
 	}
 
-	if(type === "client") {
+	if (type === "client") {
 		snapshot.clientsConnected.push(subscriberPort)
 		return
 	}
 
-	if(type === "data") {
+	if (type === "data") {
 		const shards = snapshot.shards
-		const node = shards.find(element => {
-			const nodePath = new String(`http://localhost:${subscriberPort}`);
-			const elementPath = new String(element.path);
-			return JSON.stringify(nodePath) === JSON.stringify(elementPath);
-		});
+		const node = shards.find(element =>
+			parseInt(element.port) === subscriberPort
+		);
 		node.available = true
 		return
 	}
 }
 
-function removeSubscriber(type, subscriberPort) {	
-	if(type === "orchestrator") {
-		const updatedOrchestrators = snapshot.orchestrators.replacementsInOrder.filter(e => e != subscriberPort);
-		snapshot.orchestrators.replacementsInOrder = updatedOrchestrators;
+function removeSubscriber(type, subscriberPort) {
+	if (type === "orchestrator") {
+		const updatedOrchestrators = snapshot.orchestrators.slaves.filter(element => element.port != subscriberPort);
+		snapshot.orchestrators.slaves = updatedOrchestrators;
 		return
 	}
 
-	if(type === "client") {
+	if (type === "client") {
 		const updatedClients = snapshot.clientsConnected.filter(e => e != subscriberPort);
 		snapshot.clientsConnected = updatedClients;
 		return
 	}
 
-	if(type === "data") {
+	if (type === "data") {
 		const shards = snapshot.shards
-		const node = shards.find(element => {
-			const nodePath = new String(`http://localhost:${subscriberPort}`);
-			const elementPath = new String(element.path);
-			return JSON.stringify(nodePath) === JSON.stringify(elementPath);
-		});
+		const node = shards.find(element =>
+			parseInt(element.port) === subscriberPort
+		);
 		node.available = false
 		return
 	}
 }
 
-
-var thisIsMaster = false
-
-function initAsMaster(app){
+function initAsMaster(app) {
 	snapshot = {
 		dataConfiguration: {
 			itemMaxSize: configuration.itemMaxSize,
@@ -71,7 +67,7 @@ function initAsMaster(app){
 		},
 		orchestrators: {
 			master: consoleParams.masterPort,
-			replacementsInOrder: []
+			slaves: []
 		},
 		shards: configuration.dataNodes,
 		totalPartitions: configuration.totalPartitions,
@@ -82,16 +78,34 @@ function initAsMaster(app){
 	startApplication(app)
 }
 
-function startApplication(app) {
-	app.listen(consoleParams.port, () => console.log(`Orquestrator working on port: ${consoleParams.port}!`))
-}
-
 function thisIsMaster() {
-	return snapshot && snapshot.orchestrators.master == consoleParams.port
+	return snapshot.orchestrators.master == consoleParams.port
 }
 
-function changeToMaster() {
-	snapshot.orchestrators.master = snapshot.orchestrators.replacementsInOrder.pop()
+function startApplication(app) {
+	app.listen(consoleParams.port, () => {
+		console.log(`Orquestrator working on port: ${consoleParams.port}!`);
+		if (thisIsMaster()) {
+			masterMonitor.checkAllNodesHealthEvery(2)
+		} else {
+			slaveMonitor.checkMasterHealthEvery(2)
+		}
+	}
+	)
+}
+
+function isThisSlaveWithHighestPriority(slavePort) {
+	const slavesByPriority = snapshot.orchestrators.slaves.map(slave => slave.priority)
+	const chosenSlavePriority = Math.max(...slavesByPriority)
+	const slaveToBeMaster = snapshot.orchestrators.slaves.find(element => element.priority === chosenSlavePriority)
+	return slaveToBeMaster.port === slavePort
+}
+
+function updateMaster(slavePort) {
+	const updatedSlaves = snapshot.orchestrators.slaves.filter(element => element.port != slavePort)
+	snapshot.orchestrators.slaves = updatedSlaves
+	snapshot.orchestrators.master = slavePort
+	console.log(`Orchestrator ${slavePort} is now master orchestrator!`)
 }
 
 function initAsSlave(app) {
@@ -113,6 +127,7 @@ exports.init = init
 exports.getSnapshot = getSnapshot
 exports.setSnapshot = setSnapshot
 
-exports.changeToMaster = changeToMaster
+exports.isThisSlaveWithHighestPriority = isThisSlaveWithHighestPriority
+exports.updateMaster = updateMaster
 exports.addSubscriber = addSubscriber
 exports.removeSubscriber = removeSubscriber
