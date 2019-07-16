@@ -1,17 +1,4 @@
 
-    Agregar los JSON dentro del Content Manager(cm)
-    Cargar los nuevos jsons desde hooker con el loadContentManager
-    Crear la data class
-    Crear un nuevo endpoint /planes-internet y el nuevo html
-    Crear un nuevo endpoint /tu-plan-internet/:id/:readable-url y el nuevo html
-    Chequear en el paso final de la venta posibles inconsistencias de pedir decos/contratar pack fútbol etc cuando no se tiene televisión.
-
-    Agregar los JSON dentro del Content Manager(cm)
-    Cargar los nuevos jsons desde hooker con el loadContentManager
-    Crear la data class
-    Crear un nuevo endpoint /planes-internet y el nuevo html
-    Crear un nuevo endpoint /tu-plan-internet/:id/:readable-url y el nuevo html
-    Chequear en el paso final de la venta posibles inconsistencias de pedir decos/contratar pack fútbol etc cuando no se tiene televisión.
 # tp-iasc-2019
 
 ## Levantar el proyecto
