@@ -6,6 +6,7 @@ const hash = require('./hash-function.js')
 const axios = require('axios');
 const app = express()
 const util = require('util')
+const {parse, stringify} = require('flatted/cjs');
 var dataNodes
 var totalPartitions
 
@@ -127,14 +128,14 @@ app.get('/valuesGreaterThan', (req, res, next) => {
 		}
 	})))
 
-	axios.all(requests)
-		.then((responses) => {
-			console.log(util.inspect(responses))
-			//console.log(`Query result: ${JSON.stringify(responses)}`)
-			res.json(responses)
-		})
+	Promise.all(requests)
+		.then(function(responses) {
+			const jsonResponse = responses.map(response => response.data)
+			responses.forEach(response => console.log(jsonResponse));
+			res.json(jsonResponse)
+		  })
 		.catch((error) => {
-			console.log(`ERROR: ${JSON.stringify(error.response)}`)
+			console.log(`ERROR: ${util.inspect(error.response)}`)
 			res.status(400).json(error.response)
 		})
 })
