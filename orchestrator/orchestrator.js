@@ -5,10 +5,6 @@ const app = express()
 const subscriptions = require('subscriptions')
 const cluster = require('./cluster.js')
 
-function changeMasterOrchestrator() {
-
-}
-
 app.use(bodyParser.json());
 
 app.get('/healthcheck', (req, res, next) => {
@@ -32,10 +28,6 @@ app.post('/subscribers/:type', (req, res, next) => {
 		subscriptions.notifyNewsToAllSubscribersExcept(cluster.getSnapshot(), subscriberPort)
 		res.send(cluster.getSnapshot())
 	}
-})
-
-process.on('exit', () => {
-	changeMasterOrchestrator()
 })
 
 cluster.init(app)

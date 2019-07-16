@@ -5,6 +5,7 @@ const bodyParser = require('body-parser')
 const hash = require('./hash-function.js')
 const axios = require('axios');
 const app = express()
+const util = require('util')
 var dataNodes
 var totalPartitions
 
@@ -55,15 +56,15 @@ const upsert = (req, res, next) => {
 	const value = req.body.value
 
 	if (key === undefined) {
-        res.status(400).json({ "response": "Key is missing" })
-        return
-    }
-
-    if (value === undefined) {
-        res.status(400).json({ "response": "Value is missing" })
-        return
+		res.status(400).json({ "response": "Key is missing" })
+		return
 	}
-	
+
+	if (value === undefined) {
+		res.status(400).json({ "response": "Value is missing" })
+		return
+	}
+
 	partition = hash.getPartitionFromKey(totalPartitions, key)
 	const nodePort = getDatanodePortByPartition(partition, res, key)
 	if (nodePort === "error") {
@@ -105,6 +106,41 @@ app.delete('/data/:key', (req, res, next) => {
 			console.log(`ERROR: ${JSON.stringify(error.response.data)}`)
 			res.status(400).json(error.response.data)
 		})
+})
+
+function scanPromise(port, params) {
+	return axios.get(`http://localhost:${port}/scan`, params)
+}
+
+app.get('/valuesGreaterThan', (req, res, next) => {
+	const value = req.query.value
+	if(value === undefined) {
+		res.status(400).json({ "response": "Value is missing" })
+		return
+	}
+
+	const availableNodes = dataNodes.filter(node => node.available === true)
+	const requests = []
+	availableNodes.forEach(node => requests.push(scanPromise(node.port, {
+		params: {
+			valuesGreaterThan: value
+		}
+	})))
+
+	axios.all(requests)
+		.then((responses) => {
+			console.log(util.inspect(responses))
+			//console.log(`Query result: ${JSON.stringify(responses)}`)
+			res.json(responses)
+		})
+		.catch((error) => {
+			console.log(`ERROR: ${JSON.stringify(error.response)}`)
+			res.status(400).json(error.response)
+		})
+})
+
+app.get('/valuesSmallerThan', (req, res, next) => {
+	const key = req.query.key
 })
 
 app.get('/healthcheck', (req, res, next) => {
