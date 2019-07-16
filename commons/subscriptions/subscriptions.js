@@ -19,30 +19,44 @@ function removeSubscriber(type, subscriberPort) {
 	subscribed.delete(subscriberPort)
 }
 
-function notifyNewsToAllSubscribers(news) {
-	console.log("Sending news: ", news)
-
+function notifyNewsToAllSubscribersExcept(news, excludedPort) {
 	for (var [type, ports] of subscribedNodes) {
 		ports.forEach((node) => {
-			axios.post(`http://localhost:${node}/news`, news, {timeout: 1000})
-			.then((response) => {
-				console.log(`News sent to ${node}!`)
-			})
-			.catch((error) => console.log(`Something failed sending news to ${node}. More info: ${error}`))
+			if (node != excludedPort) {
+				postNews(node, news);
+			}
 		})
 	}
 }
 
-function acceptNews(app, whatToDoWhithNewShapshot){
-	app.post('/news', (req, res, next) => { 
+function notifyNewsToAllSubscribers(news) {
+	for (var [type, ports] of subscribedNodes) {
+		ports.forEach((node) => {
+			if (node != excludedPort) {
+				postNews(node, news);
+			}
+		})
+	}
+}
+
+function postNews(node, news) {
+	axios.post(`http://localhost:${node}/news`, news, { timeout: 1000 })
+		.then((response) => {
+			console.log(`News sent to ${node}!`);
+		})
+		.catch((error) => console.log(`Something failed sending news to ${node}. More info: ${error}`));
+}
+
+function acceptNews(app, whatToDoWhithNewShapshot) {
+	app.post('/news', (req, res, next) => {
 		snapshot = req.body
 		whatToDoWhithNewShapshot(snapshot)
 		res.sendStatus(200)
-	}) 
+	})
 }
 
-function subscribeAs(nodeType, myPort, targetPort, whatToDoWhithNewShapshot, startApplication, app){
-	axios.post(`http://localhost:${targetPort}/subscribers/${nodeType}`, {port: myPort}) //todo: poner timeout de 1000 de nuevo
+function subscribeAs(nodeType, myPort, targetPort, whatToDoWhithNewShapshot, startApplication, app) {
+	axios.post(`http://localhost:${targetPort}/subscribers/${nodeType}`, { port: myPort }, { timeout: 1000 })
 		.then((response) => {
 			console.log(`I'm subscribed to ${targetPort} as ${nodeType}!`)
 			console.log("New Snapshot:", response.data)
@@ -52,7 +66,7 @@ function subscribeAs(nodeType, myPort, targetPort, whatToDoWhithNewShapshot, sta
 		.catch((error) => console.log(`Something failed subscribing to ${targetPort}. More info: ${error}`))
 }
 
-function partialSubscription(nodeType){
+function partialSubscription(nodeType) {
 	return (app, myPort, targetPort, whatToDoWhithNewShapshot, startApplication) => {
 		acceptNews(app, whatToDoWhithNewShapshot)
 		subscribeAs(nodeType, myPort, targetPort, whatToDoWhithNewShapshot, startApplication, app)
@@ -62,8 +76,7 @@ function partialSubscription(nodeType){
 // El objeto "publisher" solo sirve para los orquestadores por ahora.
 // Más adelante podría servir para que podamos recibir novedades de varios nodos de distinto tipo, todo cruzado, pero por ahora solo queremos que el orquestador mande novedades.
 exports.publisher = {
-	addSubscriber: addSubscriber,
-	notifyNewsToAllSubscribers: notifyNewsToAllSubscribers
+	addSubscriber: addSubscriber
 }
 
 /*
@@ -97,5 +110,6 @@ exports.subscriber = {
 
 exports.initSubscriptions = initSubscriptions
 exports.notifyNewsToAllSubscribers = notifyNewsToAllSubscribers
+exports.notifyNewsToAllSubscribersExcept = notifyNewsToAllSubscribersExcept
 exports.subscribedNodes = subscribedNodes
 exports.removeSubscriber = removeSubscriber

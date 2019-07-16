@@ -133,7 +133,7 @@ app.get('/keys/:partition/:key', (req, res, next) =>  {
 
     const value = partitions.get(partitionIndex).get(key)
     if (value === undefined) {
-        res.status(400).json({"response" : "Key was not present in node"})
+        res.status(421).json({"response" : "Key was not present in node"})
         return 
     }
 

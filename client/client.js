@@ -22,8 +22,16 @@ function findMasterOrchestrator() {
 	}
 }
 
-function getDatanodePathByPartition(partition) {
-	return dataNodes.filter((x) => x.partitions.from <= partition && partition <= x.partitions.to)[0]['path']
+function getDatanodePathByPartition(partition, res, key) {
+	const dataNode = dataNodes.filter((x) => x.partitions.from <= partition && partition <= x.partitions.to)[0]
+	if(!dataNode.available) {
+		const errorMessage = `Data node storing partition ${partition} is not available. Cannot make request for key: ${key}`
+		console.log(errorMessage)
+		res.status(400).json({error : errorMessage})
+		return "error"
+	}
+	
+	return dataNode['path']
 }
 
 function getDatanodesInformation(snapshot) {
@@ -40,7 +48,11 @@ app.get('/get/:key', (req, res, next) => {
 	try {
 		const key = req.params.key
 		partition = hash.getPartitionFromKey(totalPartitions, key)
-		datanodeIp = getDatanodePathByPartition(partition)
+		datanodeIp = getDatanodePathByPartition(partition, res, key)
+		if(datanodeIp === "error") {
+			return
+		}
+
 		console.log(`${datanodeIp}/keys/${partition}/${key}`)
 		axios.get(`${datanodeIp}/keys/${partition}/${key}`)
 		.then((response) => {
@@ -48,20 +60,25 @@ app.get('/get/:key', (req, res, next) => {
 			res.json(response.data)
 		})
 		.catch((error) => {
-			console.log(`ERROR: ${error}`)
-			res.status(400).json(error)
+			console.log(`ERROR: ${error.response.data}`)
+			res.status(400).json(error.response.data)
 		})
 	} catch(e) {
 		findMasterOrchestrator()
 		res.status(404).json({"error": "No configuration found; trying to reconnect master orchestrator. Try again in a few seconds"})
 	}
 })
+
 const upsert = (req, res, next) => {
 	try {
 		const key = req.params.key
 		const value = req.params.value
 		partition = hash.getPartitionFromKey(totalPartitions, key)
-		datanodeIp = getDatanodePathByPartition(partition)
+		datanodeIp = getDatanodePathByPartition(partition, res, key)
+		if(datanodeIp === "error") {
+			return
+		}
+
 		axios.post(`${datanodeIp}/keys/${partition}`, 
 			{
 				"key": key,
@@ -88,7 +105,11 @@ app.get('/delete/:key', (req, res, next) => {
 	try {
 		const key = req.params.key
 		partition = hash.getPartitionFromKey(totalPartitions, key)
-		datanodeIp = getDatanodePathByPartition(partition)
+		datanodeIp = getDatanodePathByPartition(partition, res, key)
+		if(datanodeIp === "error") {
+			return
+		}
+
 		axios.delete(`${datanodeIp}/keys/${partition}/${key}`)
 		.then((response) => {
 			console.log(`Deletion: ${response.data}`)
