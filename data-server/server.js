@@ -100,10 +100,10 @@ function searchForGreaterValues(valuesGreaterThan, res) {
 function searchForSmallerValues(valuesSmallerThan, res) {
     const result = {}
 
-    for (var partitions of partitions.values()) {
-        for (var [key, value] of partitions) {
+    for (var [index, partition] of partitions) {
+        for (var [key, value] of partition) {
             console.log(key + ' = ' + value);
-            if (value < valuesSmallerThan) {
+            if (value < valuesGreaterThan) {
                 result[key] = value;
             }
         }

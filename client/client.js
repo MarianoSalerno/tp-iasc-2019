@@ -113,20 +113,31 @@ function scanPromise(port, params) {
 	return axios.get(`http://localhost:${port}/scan`, params)
 }
 
-app.get('/valuesGreaterThan', (req, res, next) => {
-	const value = req.query.value
-	if(value === undefined) {
-		res.status(400).json({ "response": "Value is missing" })
+app.get('/values', (req, res, next) => {
+	var queryParams
+
+	const greaterThan = req.query.greaterThan
+    if (greaterThan != undefined) {
+		queryParams = {params: {
+			valuesGreaterThan: greaterThan
+		}}
+	}
+
+    const smallerThan = req.query.smallerThan
+	if (smallerThan != undefined) {
+		queryParams = {params: {
+			valuesSmallerThan: smallerThan
+		}}
+	}
+	
+	if(greaterThan === undefined && smallerThan === undefined) {
+		res.status(400).json({ "response": "Missing query param" })
 		return
 	}
 
 	const availableNodes = dataNodes.filter(node => node.available === true)
 	const requests = []
-	availableNodes.forEach(node => requests.push(scanPromise(node.port, {
-		params: {
-			valuesGreaterThan: value
-		}
-	})))
+	availableNodes.forEach(node => requests.push(scanPromise(node.port, queryParams)))
 
 	Promise.all(requests)
 		.then(function(responses) {
