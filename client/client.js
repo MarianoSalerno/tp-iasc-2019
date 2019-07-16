@@ -40,7 +40,6 @@ app.get('/data/:key', (req, res, next) => {
 		return
 	}
 
-	console.log(`http://localhost:${nodePort}/keys/${partition}/${key}`)
 	axios.get(`http://localhost:${nodePort}/keys/${partition}/${key}`)
 		.then((response) => {
 			console.log(`Query result: ${JSON.stringify(response.data)}`)

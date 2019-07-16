@@ -106,8 +106,8 @@ En principio, entienden:
 * Read ( GET /data/:key )
 * Upsert ( POST /data ) { key: key, value: value }
 * Delete ( DELETE /data/:key )
-* valuesGreaterThan ( GET /valuesgreaterthan?query=value )
-* valuesSmallerThan ( GET /valuessmallerthan?query=value )
+* valuesGreaterThan ( GET /values?greaterThan=value )
+* valuesSmallerThan ( GET /values?smallerThan=value )
 
 En caso de Read/Upsert/Delete lo que hacen es:
 * Deducir a qué partición va ese dato.
