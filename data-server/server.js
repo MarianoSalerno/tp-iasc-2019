@@ -103,7 +103,7 @@ function searchForSmallerValues(valuesSmallerThan, res) {
     for (var [index, partition] of partitions) {
         for (var [key, value] of partition) {
             console.log(key + ' = ' + value);
-            if (value < valuesGreaterThan) {
+            if (value < valuesSmallerThan) {
                 result[key] = value;
             }
         }
